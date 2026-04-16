@@ -10,12 +10,7 @@ project/
 │   ├── requirements.txt        ← Docker / Linux deps (CPU ONNX)
 │   ├── requirements-native.txt ← macOS deps (CoreML ONNX)
 │   └── Dockerfile
-├── frontend/
-│   └── index.html              ← Self-contained SPA, open directly in browser
-├── models/                     ← Drop your .onnx model here
-├── uploads/                    ← Uploaded videos (bind-mounted in Docker)
-├── scripts/
-│   └── sample-waypoints.json
+├── index.html              ← Self-contained SPA, open directly in browser
 ├── docker-compose.yml
 ├── run-native.sh               ← Start natively (CoreML/MPS on Apple Silicon)
 └── run-docker.sh               ← Build + start Docker backend
