@@ -11,6 +11,7 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
   <style>
     :root {
       --mono: 'Space Mono', monospace;
@@ -1105,6 +1106,22 @@
       </div>
 
       <div class="topbar-right">
+        <div style="position:relative" id="exportWrap">
+          <button class="btn btn-ghost" id="exportBtn" onclick="toggleExportMenu()">↓ Export</button>
+          <div id="exportMenu"
+            style="display:none;position:absolute;top:34px;right:0;min-width:150px;background:var(--bg1);border:1px solid var(--border2);border-radius:8px;overflow:hidden;z-index:400;box-shadow:0 8px 24px rgba(0,0,0,.35)">
+            <button onclick="exportCSV()"
+              style="display:block;width:100%;text-align:left;padding:8px 13px;font-size:11px;font-family:var(--mono);color:var(--txt);border-bottom:1px solid var(--border);background:none;cursor:pointer"
+              onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+              📄 Download CSV
+            </button>
+            <button onclick="exportGeoJSON()"
+              style="display:block;width:100%;text-align:left;padding:8px 13px;font-size:11px;font-family:var(--mono);color:var(--txt);background:none;cursor:pointer"
+              onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+              🗺 Download GeoJSON
+            </button>
+          </div>
+        </div>
         <button class="btn btn-primary" id="btnStart" onclick="startStream()">▶ Start</button>
         <button class="btn btn-stop" id="btnStop" onclick="stopStream()" style="display:none">■ Stop</button>
         <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
@@ -1133,6 +1150,13 @@
           <div class="kpi">
             <div class="kpi-num c-g" id="numConf">—</div>
             <div class="kpi-lbl">Last conf</div>
+          </div>
+          <div class="kpi" style="grid-column:1/-1">
+            <div style="display:flex;align-items:baseline;gap:5px">
+              <div class="kpi-num c-g" id="numQuality">100</div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--txt2)">/100</div>
+            </div>
+            <div class="kpi-lbl">Road quality score</div>
           </div>
         </div>
       </div>
@@ -1345,14 +1369,15 @@
   </div>
 
   <script>
-    const API = (() => { if (location.protocol === 'file:') return 'http://localhost:8000'; return location.origin; })();
+    const API = 'http://localhost:8000';
     const WS_URL = API.replace(/^http/, 'ws') + '/ws/stream';
 
-    let ws = null, map = null, carMarker = null;
+    let ws = null, map = null, carMarker = null, heatLayer = null;
     let detectionCount = 0, fpsTs = [];
     let streamSrc = 'file';
     let webcamStream = null, webcamWs = null, webcamCapInterval = null;
     let routePolyline = null;
+    let pothole_events = [];
 
     // ── Live GPS (browser geolocation) ────────────────────────────────────
     let liveGps = null;           // { lat, lng, accuracy, ts }
@@ -1456,6 +1481,10 @@
       const carHtml = `<div style="width:16px;height:16px;background:var(--b);border-radius:50%;border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:8px;box-shadow:0 0 6px var(--b)">🚗</div>`;
       carMarker = L.marker([18.5204, 73.8567], { icon: L.divIcon({ html: carHtml, iconSize: [16, 16], iconAnchor: [8, 8], className: '' }) }).addTo(map);
       routePolyline = L.polyline([], { color: 'var(--b)', weight: 2, opacity: .5, dashArray: '5 5' }).addTo(map);
+      heatLayer = L.heatLayer([], {
+        radius: 28, blur: 22, maxZoom: 17,
+        gradient: { 0.3: '#0a84ff', 0.6: '#ff9f0a', 1.0: '#ff3b30' }
+      }).addTo(map);
     }
 
     // ── Source switching ──────────────────────────────────────────────────
@@ -1562,6 +1591,7 @@
     // ── Stream ────────────────────────────────────────────────────────────
     function startStream() {
       detectionCount = 0;
+      pothole_events = [];
       el('evList').innerHTML = '<div class="ev-empty" id="evEmpty">Loading…</div>';
       el('btnStart').style.display = 'none';
       el('btnStop').style.display = 'inline-flex';
@@ -1646,6 +1676,7 @@
           d.event.gps_source = gpsSrc;
         }
 
+        pothole_events.push(d.event);
         detectionCount++;
         addPothole(d.event);
         addEvItem(d.event);
@@ -1654,12 +1685,21 @@
         el('numConf').textContent = (d.event.conf * 100).toFixed(0) + '%';
         el('statInf').textContent = `${d.event.class_name?.toUpperCase() || 'POTHOLE'} ${(d.event.conf * 100).toFixed(0)}%`;
         showDetectionToast(d.event);
+
       }
 
       el('numPot').textContent = detectionCount;
       el('numFrame').textContent = d.frame_idx || 0;
       el('numFps').textContent = fpsTs.length;
       el('hudPot').textContent = detectionCount;
+
+      const fi = d.frame_idx || 1;
+      const rate = detectionCount / Math.max(fi, 1);
+      const rawQ = 100 - rate * 380 - detectionCount * 2.1;
+      const quality = Math.max(0, Math.min(100, Math.round(rawQ)));
+      const qEl = el('numQuality');
+      qEl.textContent = quality;
+      qEl.className = 'kpi-num ' + (quality > 75 ? 'c-g' : quality > 45 ? 'c-o' : 'c-r');
 
       if (gps.lat) {
         const ll = [gps.lat, gps.lng];
@@ -1692,6 +1732,7 @@
       </div>`, { maxWidth: 220 });
       m.on('click', () => openModal(ev));
       m.addTo(map);
+      heatLayer.addLatLng([ev.lat, ev.lng, Math.min(ev.conf * 1.4, 1.0)]);
     }
 
     // ── Toast ──────────────────────────────────────────────────────────────
@@ -1746,6 +1787,53 @@
       el('modalBg').classList.add('open');
     }
     function closeModal() { el('modalBg').classList.remove('open'); }
+    function toggleExportMenu() {
+      const m = el('exportMenu');
+      m.style.display = m.style.display === 'none' ? 'block' : 'none';
+      const close = e => { if (!el('exportWrap').contains(e.target)) { m.style.display = 'none'; document.removeEventListener('click', close); } };
+      if (m.style.display === 'block') setTimeout(() => document.addEventListener('click', close), 0);
+    }
+
+    function exportCSV() {
+      if (!pothole_events?.length) { showToast('No data', 'Run a detection first.', 'warn'); return; }
+      const rows = [['id', 'lat', 'lng', 'confidence', 'class', 'frame', 'gps_source', 'timestamp']];
+      pothole_events.forEach(ev => rows.push([
+        ev.id + 1, ev.lat.toFixed(6), ev.lng.toFixed(6),
+        (ev.conf * 100).toFixed(1) + '%', ev.class_name || 'pothole',
+        ev.frame, ev.gps_source || 'interpolated',
+        new Date(ev.ts * 1000).toISOString()
+      ]));
+      const csv = rows.map(r => r.join(',')).join('\n');
+      _download('roadvisionai_detections.csv', 'text/csv', csv);
+      el('exportMenu').style.display = 'none';
+      showToast('CSV exported', `${pothole_events.length} events`, 'success');
+    }
+
+    function exportGeoJSON() {
+      if (!pothole_events?.length) { showToast('No data', 'Run a detection first.', 'warn'); return; }
+      const geojson = {
+        type: 'FeatureCollection',
+        features: pothole_events.map(ev => ({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [ev.lng, ev.lat] },
+          properties: {
+            id: ev.id + 1, confidence: parseFloat((ev.conf * 100).toFixed(1)),
+            class: ev.class_name || 'pothole', frame: ev.frame,
+            gps_source: ev.gps_source || 'interpolated',
+            timestamp: new Date(ev.ts * 1000).toISOString()
+          }
+        }))
+      };
+      _download('roadvisionai_detections.geojson', 'application/geo+json', JSON.stringify(geojson, null, 2));
+      el('exportMenu').style.display = 'none';
+      showToast('GeoJSON exported', `${pothole_events.length} features`, 'success');
+    }
+
+    function _download(filename, mime, content) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+      a.download = filename; a.click();
+    }
     function maybeClose(e) { if (e.target === el('modalBg')) closeModal(); }
 
     // ── Uploads ────────────────────────────────────────────────────────────

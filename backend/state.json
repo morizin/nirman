@@ -1,14 +1,14 @@
 {
   "model_path": "models/best.onnx",
-  "video_path": "uploads/videoplayback.mp4",
+  "video_path": "uploads/vlc-record-2026-04-15-21h35m11s-DASH CAM 2016 01 29 (42 Miles of Potholes) [BQo87tGRM74].mkv",
   "waypoints": [
     {
-      "lat": 18.5204,
-      "lng": 73.8567
+      "lat": 19.011123,
+      "lng": 73.094616
     },
     {
-      "lat": 18.529,
-      "lng": 73.866
+      "lat": 19.015,
+      "lng": 73.094001
     }
   ]
 }
