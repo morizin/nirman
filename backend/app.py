@@ -19,6 +19,7 @@ import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import glob
 
 try:
     import onnxruntime as ort
@@ -27,6 +28,7 @@ try:
 except ImportError:
     ONNX_AVAILABLE = False
     print("onnxruntime not found — DEMO mode")
+
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 # YOLOv5 raw output: confidence = objectness * class_score
@@ -38,6 +40,41 @@ STREAM_FPS = int(os.getenv("STREAM_FPS", "30"))
 JPEG_QUALITY = int(os.getenv("JPEG_QUALITY", "85"))
 THUMB_QUALITY = int(os.getenv("THUMB_QUALITY", "80"))
 NOTIF_DEBOUNCE_SEC = 30
+
+
+# Mutable runtime config (can be updated via /config)
+_conf_threshold = CONFIDENCE_THRESHOLD  # runtime value, overrides env
+
+
+def get_conf_threshold():
+    return _conf_threshold
+
+
+# ── State persistence ──────────────────────────────────────────────────────────
+STATE_FILE = Path("state.json")
+
+
+def save_state():
+    STATE_FILE.write_text(
+        json.dumps(
+            {
+                "model_path": _current_model_path,
+                "video_path": video_path,
+                "waypoints": waypoints,
+            },
+            indent=2,
+        )
+    )
+
+
+def load_state() -> dict:
+    if STATE_FILE.exists():
+        try:
+            return json.loads(STATE_FILE.read_text())
+        except Exception:
+            pass
+    return {}
+
 
 app = FastAPI(title="RoadVisionAI API v11")
 app.add_middleware(
@@ -130,7 +167,7 @@ class PotholeDetector:
             cls_conf = float(cls_scores[cls_id])
             conf = obj_conf * cls_conf  # ← THE KEY FIX
 
-            if conf < CONFIDENCE_THRESHOLD:
+            if conf < get_conf_threshold():
                 continue
             if cls_id == D44_CLASS_IDX:
                 continue
@@ -150,7 +187,7 @@ class PotholeDetector:
             return []
 
         # cv2.dnn.NMSBoxes expects float32 lists
-        indices = cv2.dnn.NMSBoxes(boxes, scores, CONFIDENCE_THRESHOLD, NMS_THRESHOLD)
+        indices = cv2.dnn.NMSBoxes(boxes, scores, get_conf_threshold(), NMS_THRESHOLD)
 
         results = []
         if len(indices) > 0:
@@ -212,10 +249,19 @@ class PotholeDetector:
     def detect(self, frame: np.ndarray):
         if self.session is None:
             return self._demo_detections(frame)
-        img, h, w = self.preprocess(frame)
+        h = frame.shape[0]
+        # Road is in bottom ~55% of dashcam frame — skip sky/hood
+        crop_y = int(h * 0.38)
+        crop = frame[crop_y:, :]
+        img, ch, cw = self.preprocess(crop)
         with self._lock:
             outputs = self.session.run(None, {self.input_name: img})
-        return self.postprocess(outputs[0], h, w)
+        results = self.postprocess(outputs[0], ch, cw)
+        # Shift y-coords back to full frame space
+        for r in results:
+            r[1] += crop_y
+            r[3] += crop_y
+        return results
 
     def _demo_detections(self, frame: np.ndarray):
         import random
@@ -321,9 +367,6 @@ class NotificationManager:
         return (time.time() - self._last_sent) > NOTIF_DEBOUNCE_SEC
 
     def send(self, event: dict, thumb_b64: Optional[str] = None):
-        if not self.should_notify():
-            return
-        self._last_sent = time.time()
         if self.enabled and self.smtp_user:
             try:
                 self._send_email(event, thumb_b64)
@@ -397,6 +440,21 @@ waypoints: list = [
 ]
 pothole_events: list = []
 
+_current_model_path: Optional[str] = None
+
+# Auto-restore state on startup
+_state = load_state()
+if _state.get("model_path") and os.path.exists(_state["model_path"]):
+    _current_model_path = _state["model_path"]
+    detector = PotholeDetector(_current_model_path)
+    print(f"♻ Restored model: {_current_model_path}")
+if _state.get("video_path") and os.path.exists(_state["video_path"]):
+    video_path = _state["video_path"]
+    print(f"♻ Restored video: {video_path}")
+if _state.get("waypoints"):
+    waypoints = _state["waypoints"]
+    print(f"♻ Restored {len(waypoints)} waypoints")
+
 
 # ── HTTP Routes ────────────────────────────────────────────────────────────────
 @app.get("/")
@@ -425,11 +483,13 @@ async def health():
 
 @app.post("/upload/model")
 async def upload_model(file: UploadFile = File(...)):
-    global detector
+    global detector, _current_model_path
     dest = Path("models") / file.filename
     dest.parent.mkdir(exist_ok=True)
     dest.write_bytes(await file.read())
-    detector = PotholeDetector(str(dest))
+    _current_model_path = str(dest)
+    detector = PotholeDetector(_current_model_path)
+    save_state()
     return {
         "status": "ok",
         "model": file.filename,
@@ -445,6 +505,7 @@ async def upload_video(file: UploadFile = File(...)):
     dest.parent.mkdir(exist_ok=True)
     dest.write_bytes(await file.read())
     video_path = str(dest)
+    save_state()
     return {"status": "ok", "video": file.filename}
 
 
@@ -452,11 +513,13 @@ async def upload_video(file: UploadFile = File(...)):
 async def set_waypoints(points: list = Body(...)):
     global waypoints
     waypoints = points
+    save_state()
     return {"status": "ok", "count": len(points)}
 
 
 @app.post("/config")
 async def set_config(cfg: dict = Body(...)):
+    global _conf_threshold
     notif_keys = {
         "smtp_host",
         "smtp_port",
@@ -467,12 +530,28 @@ async def set_config(cfg: dict = Body(...)):
     }
     if notif_keys & set(cfg.keys()):
         notifier.configure({k: cfg[k] for k in notif_keys if k in cfg})
-    return {"status": "ok", "notifier_enabled": notifier.enabled}
+    if "conf_threshold" in cfg:
+        _conf_threshold = float(cfg["conf_threshold"])
+    return {
+        "status": "ok",
+        "notifier_enabled": notifier.enabled,
+        "conf_threshold": _conf_threshold,
+    }
 
 
 @app.get("/events")
 async def get_events():
     return JSONResponse(pothole_events)
+
+
+@app.get("/state")
+async def get_state():
+    return {
+        "model_file": Path(_current_model_path).name if _current_model_path else None,
+        "video_file": Path(video_path).name if video_path else None,
+        "waypoints_count": len(waypoints),
+        "conf_threshold": _conf_threshold,
+    }
 
 
 @app.post("/test-notification")
@@ -548,8 +627,13 @@ async def stream(websocket: WebSocket):
             pothole_events.append(ev)
             payload["event"] = ev
             if notifier.should_notify():
-                await loop.run_in_executor(
-                    None, functools.partial(notifier.send, ev, thumb_b64)
+                notifier._last_sent = (
+                    time.time()
+                )  # mark immediately to prevent double-fire
+                asyncio.ensure_future(
+                    loop.run_in_executor(
+                        None, functools.partial(notifier.send, ev, thumb_b64)
+                    )
                 )
 
         await websocket.send_json(payload)

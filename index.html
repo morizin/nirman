@@ -1137,6 +1137,23 @@
         </div>
       </div>
 
+      <!-- Confidence slider — add after Detection Stats sec -->
+      <div class="sec">
+        <div class="sec-label" style="display:flex;align-items:center;justify-content:space-between">
+          Confidence threshold
+          <span style="font-family:var(--mono);font-size:10px;color:var(--b)" id="confValDisplay">20%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" id="confSlider" min="10" max="80" value="20" step="5"
+            style="flex:1;accent-color:var(--b);height:3px;cursor:pointer" oninput="onConfSlider(this.value)"
+            onchange="pushConfThreshold(this.value)">
+        </div>
+        <div
+          style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--txt3);margin-top:3px">
+          <span>Sensitive</span><span>Precise</span>
+        </div>
+      </div>
+
       <!-- GPS Status -->
       <div class="sec">
         <div class="sec-label" style="display:flex;align-items:center;gap:6px">
@@ -1787,19 +1804,62 @@
       initMap();
     }
 
+    function onConfSlider(v) {
+      el('confValDisplay').textContent = v + '%';
+    }
+
+    async function pushConfThreshold(v) {
+      await fetch(API + '/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conf_threshold: parseFloat(v) / 100 })
+      }).catch(() => null);
+    }
+
     function setConn(cls, txt) { el('connDot').className = 'conn-dot ' + cls; el('connTxt').textContent = txt; }
     function el(id) { return document.getElementById(id); }
 
     async function checkHealth() {
       try {
-        const r = await fetch(API + '/health', { signal: AbortSignal.timeout(3000) });
-        if (r.ok) {
-          const d = await r.json();
+        const [hr, sr] = await Promise.all([
+          fetch(API + '/health', { signal: AbortSignal.timeout(3000) }),
+          fetch(API + '/state', { signal: AbortSignal.timeout(3000) })
+        ]);
+        if (hr.ok) {
+          const d = await hr.json();
           const ep = d.providers?.[0] || 'CPU';
-          el('statInf').textContent = d.model_loaded ? (ep.includes('CoreML') ? 'COREML ✓' : ep.includes('CUDA') ? 'CUDA ✓' : 'ONNX CPU') : 'DEMO MODE';
-          setConn('', 'READY'); updateNotifBadge(d.notifier_on);
+          el('statInf').textContent = d.model_loaded
+            ? (ep.includes('CoreML') ? 'COREML ✓' : ep.includes('CUDA') ? 'CUDA ✓' : 'ONNX CPU')
+            : 'DEMO MODE';
+          setConn('', 'READY');
+          updateNotifBadge(d.notifier_on);
         }
-      } catch { setConn('err', 'BACKEND OFFLINE'); el('statInf').textContent = 'OFFLINE'; showToast('Backend offline', 'Run: python backend/app.py\nor: uvicorn app:app --port 8000', 'warn'); }
+        if (sr.ok) {
+          const s = await sr.json();
+          if (s.model_file) {
+            el('mdlName').textContent = s.model_file;
+            el('uplMdl').classList.add('ok');
+          }
+          if (s.video_file) {
+            el('vidName').textContent = s.video_file;
+            el('uplVid').classList.add('ok');
+          }
+          if (s.waypoints_count > 2) {
+            el('gpsName').textContent = `${s.waypoints_count} waypoints loaded`;
+            el('uplGps').classList.add('ok');
+            el('gpsFileInfo').style.display = 'none';
+          }
+          if (s.conf_threshold) {
+            const pct = Math.round(s.conf_threshold * 100);
+            el('confSlider').value = pct;
+            el('confValDisplay').textContent = pct + '%';
+          }
+        }
+      } catch {
+        setConn('err', 'BACKEND OFFLINE');
+        el('statInf').textContent = 'OFFLINE';
+        showToast('Backend offline', 'Run: python backend/app.py', 'warn');
+      }
     }
 
     initMap();

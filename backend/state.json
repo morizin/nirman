@@ -1,0 +1,14 @@
+{
+  "model_path": "models/best.onnx",
+  "video_path": "uploads/videoplayback.mp4",
+  "waypoints": [
+    {
+      "lat": 18.5204,
+      "lng": 73.8567
+    },
+    {
+      "lat": 18.529,
+      "lng": 73.866
+    }
+  ]
+}
