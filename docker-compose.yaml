@@ -11,16 +11,17 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # Persist uploads and models outside the container
-      - ./uploads:/app/uploads
-      - ./models:/app/models
+      # Bind-mount from the backend subfolder (where the actual data lives)
+      - ./backend/uploads:/app/uploads
+      - ./backend/models:/app/models
     environment:
       STREAM_FPS: "25"
       INFERENCE_SKIP: "2"     # Run inference every 2nd frame → ~12 inferences/s at 25 fps
-      JPEG_QUALITY: "72"
-      CONFIDENCE_THRESHOLD: "0.35"
+      JPEG_QUALITY: "100"
+      THUMB_QUALITY: "80"
+      CONFIDENCE_THRESHOLD: "0.2"
       PORT: "8000"
-    # Resource limits — tune to your machine
+      NMS_THRESHOLD: "0.3"
     deploy:
       resources:
         limits:
@@ -33,11 +34,15 @@ services:
       retries: 3
       start_period: 15s
 
-# Optional: uncomment to run the frontend via nginx
-#  frontend:
-#    image: nginx:alpine
-#    container_name: roadvision-frontend
-#    ports:
-#      - "3000:80"
-#    volumes:
-#      - ./frontend:/usr/share/nginx/html:ro
+  frontend:
+    image: nginx:alpine
+    container_name: roadvision-frontend
+    ports:
+      - "3000:80"
+    volumes:
+      # index.html lives at project root — mounted read-only
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

@@ -46,5 +46,6 @@ echo "→  Open frontend/index.html in your browser"
 echo "→  Press Ctrl+C to stop"
 echo ""
 
+python3 -m http.server 8001 &
 cd backend
-STREAM_FPS=25 INFERENCE_SKIP=2 DEV=0 uv run python3 app.py
+uv run python3 app.py

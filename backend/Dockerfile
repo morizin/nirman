@@ -29,12 +29,6 @@ COPY app.py .
 # Writable dirs for uploads / models (bind-mounted in compose)
 RUN mkdir -p /app/uploads /app/models
 
-ENV PYTHONUNBUFFERED=1 \
-    STREAM_FPS=25 \
-    INFERENCE_SKIP=2 \
-    JPEG_QUALITY=72 \
-    PORT=8000
-
 EXPOSE 8000
 
 # Run with uvloop + httptools for max throughput
