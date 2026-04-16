@@ -1,0 +1,23 @@
+# RoadVisionAI — native macOS requirements (Apple Silicon / Intel)
+# Install with: pip install -r requirements-native.txt
+
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+uvloop>=0.19.0          # faster event loop
+httptools>=0.6.0        # faster HTTP parser
+websockets>=12.0
+opencv-python>=4.9.0    # full OpenCV (includes contrib algorithms)
+numpy>=1.26.0
+httpx>=0.28.1          # async HTTP client for ntfy
+python-multipart>=0.0.9
+onnxruntime>=1.17.3     # CPU EP always available
+
+# Apple Silicon / macOS: CoreML execution provider
+# Install onnxruntime with CoreML support:
+#   pip install onnxruntime-silicon   (unofficial, M1/M2/M3)
+# OR the official way on macOS arm64:
+#   pip install onnxruntime           (includes CoreML EP on macOS 12+)
+#
+# Verify with:
+#   python -c "import onnxruntime; print(onnxruntime.get_available_providers())"
+# You should see 'CoreMLExecutionProvider' in the list.

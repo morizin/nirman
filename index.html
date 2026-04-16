@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoadVisionAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --mono: 'Space Mono', monospace;
+      --ui: 'DM Sans', sans-serif;
+      --r: #ff3b30;
+      --g: #30d158;
+      --b: #0a84ff;
+      --y: #ffd60a;
+      --o: #ff9f0a;
+      --t: 160ms cubic-bezier(.16, 1, .3, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a0b0d;
+      --bg1: #111318;
+      --bg2: #181c22;
+      --bg3: #1e232c;
+      --border: rgba(255, 255, 255, .07);
+      --border2: rgba(255, 255, 255, .13);
+      --txt: #e8eaf0;
+      --txt2: #7c8494;
+      --txt3: #3d4250;
+    }
+
+    [data-theme="light"] {
+      --bg: #f2f3f5;
+      --bg1: #fff;
+      --bg2: #f7f8fa;
+      --bg3: #eceef2;
+      --border: rgba(0, 0, 0, .08);
+      --border2: rgba(0, 0, 0, .14);
+      --txt: #1a1d24;
+      --txt2: #5c6270;
+      --txt3: #c0c4cc;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: var(--ui);
+      font-size: 13px;
+      color: var(--txt);
+      background: var(--bg);
+      height: 100dvh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+      font: inherit;
+      color: inherit;
+    }
+
+    input[type=file],
+    input[type=text],
+    input[type=password],
+    input[type=number] {
+      font: inherit;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: 48px 1fr;
+      height: 100dvh;
+    }
+
+    .topbar {
+      grid-column: 1/-1;
+      background: var(--bg1);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      position: relative;
+      z-index: 200;
+    }
+
+    .logo {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-mark {
+      width: 20px;
+      height: 20px;
+      background: var(--b);
+      clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+      flex-shrink: 0;
+    }
+
+    .conn-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--txt2);
+      letter-spacing: .04em;
+    }
+
+    .conn-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--txt3);
+      transition: background var(--t), box-shadow var(--t);
+    }
+
+    .conn-dot.live {
+      background: var(--g);
+      box-shadow: 0 0 6px var(--g);
+      animation: blink 2s infinite;
+    }
+
+    .conn-dot.err {
+      background: var(--r);
+      box-shadow: 0 0 6px var(--r);
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      60% {
+        opacity: .4
+      }
+    }
+
+    .topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background var(--t), opacity var(--t), transform 80ms;
+      border: 1px solid transparent;
+    }
+
+    .btn:active {
+      transform: scale(.97);
+    }
+
+    .btn-primary {
+      background: var(--b);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #1a8eff;
+    }
+
+    .btn-ghost {
+      border-color: var(--border2);
+      color: var(--txt2);
+    }
+
+    .btn-ghost:hover {
+      background: var(--bg3);
+      color: var(--txt);
+    }
+
+    .btn-stop {
+      background: rgba(255, 59, 48, .15);
+      color: var(--r);
+      border-color: rgba(255, 59, 48, .3);
+    }
+
+    .btn-stop:hover {
+      background: rgba(255, 59, 48, .25);
+    }
+
+    .btn-amber {
+      background: rgba(255, 159, 10, .12);
+      color: var(--o);
+      border-color: rgba(255, 159, 10, .3);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .btn-amber:hover {
+      background: rgba(255, 159, 10, .22);
+    }
+
+    .btn-green {
+      background: rgba(48, 209, 88, .12);
+      color: var(--g);
+      border-color: rgba(48, 209, 88, .3);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .btn-green:hover {
+      background: rgba(48, 209, 88, .22);
+    }
+
+    .src-pills {
+      display: flex;
+      gap: 4px;
+    }
+
+    .src-pill {
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .05em;
+      border: 1px solid var(--border);
+      color: var(--txt2);
+      transition: all var(--t);
+      cursor: pointer;
+    }
+
+    .src-pill.active {
+      background: rgba(10, 132, 255, .15);
+      border-color: rgba(10, 132, 255, .4);
+      color: var(--b);
+    }
+
+    .sidebar {
+      background: var(--bg1);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sec {
+      padding: 12px 13px 10px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .sec-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      margin-bottom: 9px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .kpi {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 9px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 7px;
+      opacity: 0;
+    }
+
+    .kpi.flash-r::after {
+      background: rgba(255, 59, 48, .18);
+      animation: kfade .5s forwards;
+    }
+
+    @keyframes kfade {
+      to {
+        opacity: 0
+      }
+    }
+
+    .kpi-num {
+      font-family: var(--mono);
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kpi-num.c-r {
+      color: var(--r)
+    }
+
+    .kpi-num.c-b {
+      color: var(--b)
+    }
+
+    .kpi-num.c-g {
+      color: var(--g)
+    }
+
+    .kpi-num.c-o {
+      color: var(--o)
+    }
+
+    .kpi-lbl {
+      font-size: 10px;
+      color: var(--txt2);
+      margin-top: 3px;
+      font-weight: 500;
+    }
+
+    /* GPS live indicator */
+    .gps-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 6px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--txt3);
+    }
+
+    .gps-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--txt3);
+      flex-shrink: 0;
+    }
+
+    .gps-dot.active {
+      background: var(--g);
+      box-shadow: 0 0 4px var(--g);
+      animation: blink 2s infinite;
+    }
+
+    .gps-dot.warn {
+      background: var(--o);
+    }
+
+    .gps-dot.err {
+      background: var(--r);
+    }
+
+    .gps-val {
+      color: var(--txt2);
+      font-size: 9px;
+    }
+
+    /* GPS info banner */
+    .gps-info {
+      padding: 6px 9px;
+      background: rgba(255, 159, 10, .07);
+      border: 1px solid rgba(255, 159, 10, .2);
+      border-radius: 6px;
+      font-size: 10px;
+      color: var(--o);
+      line-height: 1.5;
+    }
+
+    .cam-select {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .cam-row {
+      display: flex;
+      gap: 5px;
+    }
+
+    .cam-row select {
+      flex: 1;
+      padding: 6px 8px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--txt);
+      border-radius: 6px;
+      font-size: 11px;
+    }
+
+    .cam-row select:focus {
+      outline: none;
+      border-color: var(--b);
+    }
+
+    .upload-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .upl {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 9px;
+      border: 1px dashed var(--border2);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      color: var(--txt2);
+      transition: all var(--t);
+    }
+
+    .upl:hover {
+      border-color: var(--b);
+      background: rgba(10, 132, 255, .05);
+      color: var(--txt);
+    }
+
+    .upl.ok {
+      border-style: solid;
+      border-color: rgba(48, 209, 88, .4);
+      color: var(--g);
+      background: rgba(48, 209, 88, .05);
+    }
+
+    .upl-name {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    input[type=file] {
+      display: none;
+    }
+
+    .notif-form {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .notif-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .notif-label {
+      font-size: 10px;
+      color: var(--txt2);
+      min-width: 54px;
+      font-family: var(--mono);
+    }
+
+    .notif-input {
+      flex: 1;
+      padding: 5px 8px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--txt);
+      font-size: 11px;
+      font-family: var(--mono);
+    }
+
+    .notif-input:focus {
+      outline: none;
+      border-color: var(--b);
+    }
+
+    .notif-input::placeholder {
+      color: var(--txt3);
+    }
+
+    .notif-actions {
+      display: flex;
+      gap: 5px;
+      margin-top: 2px;
+    }
+
+    .notif-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 9px;
+    }
+
+    .notif-badge.on {
+      background: rgba(48, 209, 88, .12);
+      color: var(--g);
+      border: 1px solid rgba(48, 209, 88, .3);
+    }
+
+    .notif-badge.off {
+      background: var(--bg3);
+      color: var(--txt3);
+      border: 1px solid var(--border);
+    }
+
+    .events-scroll {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+      min-height: 0;
+    }
+
+    .ev-empty {
+      padding: 24px 14px;
+      text-align: center;
+      color: var(--txt3);
+      font-size: 11px;
+      line-height: 1.8;
+    }
+
+    .ev-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 13px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background var(--t);
+      animation: slideIn .2s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-5px)
+      }
+    }
+
+    .ev-item:hover {
+      background: var(--bg2);
+    }
+
+    .ev-thumb {
+      width: 52px;
+      height: 35px;
+      border-radius: 4px;
+      object-fit: cover;
+      border: 1px solid var(--border2);
+      flex-shrink: 0;
+      background: var(--bg3);
+    }
+
+    .ev-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ev-title {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .ev-sub {
+      font-size: 9px;
+      color: var(--txt2);
+      font-family: var(--mono);
+      margin-top: 1px;
+    }
+
+    .badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .badge-r {
+      background: rgba(255, 59, 48, .15);
+      color: var(--r);
+    }
+
+    .badge-o {
+      background: rgba(255, 159, 10, .15);
+      color: var(--o);
+    }
+
+    .badge-g {
+      background: rgba(48, 209, 88, .15);
+      color: var(--g);
+    }
+
+    .badge-b {
+      background: rgba(10, 132, 255, .15);
+      color: var(--b);
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: 1fr 210px;
+      overflow: hidden;
+    }
+
+    .map-wrap {
+      position: relative;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .map-hud {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      pointer-events: none;
+    }
+
+    .hud-chip {
+      background: rgba(10, 11, 13, .82);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 7px 11px;
+      font-family: var(--mono);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 100px;
+    }
+
+    .hud-val {
+      font-size: 20px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    .hud-sub {
+      font-size: 9px;
+      color: var(--txt2);
+      letter-spacing: .06em;
+    }
+
+    .hud-gps {
+      font-size: 9px;
+      color: var(--txt2);
+      letter-spacing: .04em;
+    }
+
+    /* Live GPS HUD indicator */
+    .hud-gps-live {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .hud-gps-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--txt3);
+      flex-shrink: 0;
+    }
+
+    .hud-gps-dot.active {
+      background: var(--g);
+      animation: blink 2s infinite;
+    }
+
+    .video-panel {
+      background: #000;
+      border-top: 1px solid var(--border);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #vc {
+      max-width: 100%;
+      max-height: 100%;
+      display: none;
+    }
+
+    #webcam-el {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .vid-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--txt3);
+      font-size: 12px;
+    }
+
+    .vid-empty-icon {
+      width: 38px;
+      height: 38px;
+      border: 1.5px solid var(--txt3);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .scan {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, var(--b) 50%, transparent 100%);
+      opacity: 0;
+      top: 0;
+      pointer-events: none;
+    }
+
+    .scan.on {
+      opacity: 1;
+      animation: scanMove 2s ease-in-out infinite;
+    }
+
+    @keyframes scanMove {
+      0% {
+        top: 0
+      }
+
+      100% {
+        top: 100%
+      }
+    }
+
+    .det-flash {
+      position: absolute;
+      inset: 0;
+      border: 2px solid var(--r);
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .det-flash.pop {
+      animation: detPop .35s forwards;
+    }
+
+    @keyframes detPop {
+      0% {
+        opacity: 1
+      }
+
+      100% {
+        opacity: 0
+      }
+    }
+
+    .corner-br {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .4s;
+    }
+
+    .corner-br.on {
+      opacity: 1;
+    }
+
+    .corner-br svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .prog-track {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(255, 255, 255, .05);
+    }
+
+    .prog-fill {
+      height: 100%;
+      background: var(--b);
+      transition: width .1s linear;
+    }
+
+    .vid-stats {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .vstat {
+      background: rgba(0, 0, 0, .65);
+      backdrop-filter: blur(6px);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: rgba(255, 255, 255, .7);
+      letter-spacing: .04em;
+    }
+
+    .vstat.live-badge {
+      background: rgba(48, 209, 88, .2);
+      color: var(--g);
+      border: 1px solid rgba(48, 209, 88, .3);
+    }
+
+    .vstat.webcam-badge {
+      background: rgba(10, 132, 255, .2);
+      color: var(--b);
+      border: 1px solid rgba(10, 132, 255, .3);
+    }
+
+    .vstat.gps-live-badge {
+      background: rgba(48, 209, 88, .15);
+      color: var(--g);
+      border: 1px solid rgba(48, 209, 88, .25);
+    }
+
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-end;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--bg1);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      max-width: 300px;
+      animation: toastIn .3s ease;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .4);
+      pointer-events: all;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px)
+      }
+    }
+
+    .toast-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toast-body {
+      font-size: 11px;
+      color: var(--txt2);
+      font-family: var(--mono);
+      line-height: 1.5;
+    }
+
+    .toast-close {
+      margin-left: auto;
+      color: var(--txt3);
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .75);
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--t);
+    }
+
+    .modal-bg.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--bg1);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 18px;
+      width: min(480px, 92vw);
+      transform: scale(.95) translateY(5px);
+      transition: transform var(--t);
+    }
+
+    .modal-bg.open .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .modal-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .modal-img {
+      width: 100%;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    .meta {
+      background: var(--bg2);
+      border-radius: 7px;
+      padding: 9px 11px;
+      border: 1px solid var(--border);
+    }
+
+    .meta-k {
+      font-size: 9px;
+      font-family: var(--mono);
+      color: var(--txt2);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .meta-v {
+      font-size: 12px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: var(--bg1) !important;
+      border: 1px solid var(--border2) !important;
+      border-radius: 10px !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .5) !important;
+      padding: 0 !important;
+    }
+
+    .leaflet-popup-tip-container {
+      display: none !important;
+    }
+
+    .leaflet-popup-content {
+      margin: 0 !important;
+      color: var(--txt) !important;
+      font-family: var(--ui) !important;
+    }
+
+    .popup-inner {
+      padding: 10px;
+      min-width: 180px;
+    }
+
+    .popup-img {
+      width: 100%;
+      border-radius: 5px;
+      margin-bottom: 7px;
+    }
+
+    .popup-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .popup-sub {
+      font-size: 10px;
+      color: var(--txt2);
+      font-family: var(--mono);
+    }
+
+    .theme-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: var(--txt2);
+      transition: background var(--t);
+    }
+
+    .theme-btn:hover {
+      background: var(--bg3);
+      color: var(--txt);
+    }
+
+    @media(max-width:700px) {
+      .shell {
+        grid-template-columns: 1fr
+      }
+
+      .sidebar {
+        display: none
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="logo">
+        <div class="logo-mark"></div>
+        ROADVISIONAI
+      </div>
+      <div class="conn-pill">
+        <div class="conn-dot" id="connDot"></div>
+        <span id="connTxt">IDLE</span>
+      </div>
+
+      <div class="src-pills">
+        <div class="src-pill active" id="srcFile" onclick="setSrc('file')">📁 FILE</div>
+        <div class="src-pill" id="srcCam" onclick="setSrc('webcam')">📷 WEBCAM</div>
+        <div class="src-pill" id="srcRear" onclick="setSrc('rear')">📸 REAR</div>
+      </div>
+      <div id="camSelectWrap" style="display:none">
+        <select id="camSelect"
+          style="padding:4px 7px;background:var(--bg2);border:1px solid var(--border);color:var(--txt);border-radius:5px;font-size:10px;font-family:var(--mono)"></select>
+      </div>
+
+      <div class="topbar-right">
+        <button class="btn btn-primary" id="btnStart" onclick="startStream()">▶ Start</button>
+        <button class="btn btn-stop" id="btnStop" onclick="stopStream()" style="display:none">■ Stop</button>
+        <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+      <!-- Stats -->
+      <div class="sec">
+        <div class="sec-label">Detection stats</div>
+        <div class="kpi-grid">
+          <div class="kpi" id="kpiPot">
+            <div class="kpi-num c-r" id="numPot">0</div>
+            <div class="kpi-lbl">Detections</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-num c-b" id="numFps">—</div>
+            <div class="kpi-lbl">FPS recv</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-num" id="numFrame">0</div>
+            <div class="kpi-lbl">Frame</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-num c-g" id="numConf">—</div>
+            <div class="kpi-lbl">Last conf</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GPS Status -->
+      <div class="sec">
+        <div class="sec-label" style="display:flex;align-items:center;gap:6px">
+          GPS
+          <span class="gps-status" id="gpsStatusPill">
+            <span class="gps-dot" id="gpsDot"></span>
+            <span id="gpsTxt">No fix</span>
+          </span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="gps-val" id="gpsCoordDisplay" style="font-family:var(--mono);font-size:9px;color:var(--txt3)">—
+          </div>
+          <div class="gps-val" id="gpsAccDisplay" style="font-family:var(--mono);font-size:9px;color:var(--txt3)">
+            Accuracy: —</div>
+          <!-- Info about file mode GPS -->
+          <div class="gps-info" id="gpsFileInfo" style="display:none">
+            ⚠ File mode uses interpolated waypoints.<br>
+            Upload a real GPS .json for accuracy.<br>
+            <button class="btn btn-ghost" style="margin-top:4px;font-size:9px;padding:2px 7px"
+              onclick="downloadGpsTemplate()">↓ Download template</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sources -->
+      <div class="sec">
+        <div class="sec-label">Sources</div>
+        <div class="upload-list">
+          <label class="upl" id="uplVid" for="inVid">
+            <span>📹</span>
+            <span class="upl-name" id="vidName">Upload dashcam video</span>
+          </label>
+          <input type="file" id="inVid" accept="video/*" onchange="uploadVideo(this)">
+
+          <label class="upl" id="uplMdl" for="inMdl">
+            <span>🧠</span>
+            <span class="upl-name" id="mdlName">Upload ONNX model (.onnx)</span>
+          </label>
+          <input type="file" id="inMdl" accept=".onnx" onchange="uploadModel(this)">
+
+          <label class="upl" id="uplGps" for="inGps">
+            <span>📍</span>
+            <span class="upl-name" id="gpsName">Upload GPS waypoints (.json)</span>
+          </label>
+          <input type="file" id="inGps" accept=".json" onchange="uploadGPS(this)">
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="sec">
+        <div class="sec-label" style="display:flex;align-items:center;gap:6px">
+          Notifications
+          <span class="notif-badge off" id="notifBadge">OFF</span>
+        </div>
+        <div class="notif-form">
+          <div class="notif-row">
+            <span class="notif-label">SMTP</span>
+            <input class="notif-input" type="text" id="cfgSmtpHost" placeholder="smtp.gmail.com" value="smtp.gmail.com">
+          </div>
+          <div class="notif-row">
+            <span class="notif-label">EMAIL</span>
+            <input class="notif-input" type="text" id="cfgEmail" placeholder="you@gmail.com">
+          </div>
+          <div class="notif-row">
+            <span class="notif-label">PASSWORD</span>
+            <input class="notif-input" type="password" id="cfgPass" placeholder="App password">
+          </div>
+          <div class="notif-row">
+            <span class="notif-label">ALERT TO</span>
+            <input class="notif-input" type="text" id="cfgAlertTo" placeholder="team@example.com">
+          </div>
+          <div class="notif-row">
+            <span class="notif-label">NTFY</span>
+            <input class="notif-input" type="text" id="cfgNtfy" placeholder="my-road-alerts-topic">
+          </div>
+          <div class="notif-actions">
+            <button class="btn btn-amber" onclick="saveNotifConfig()">💾 Save</button>
+            <button class="btn btn-ghost" style="font-size:10px;font-family:var(--mono)" onclick="testNotif()">Test
+              ↗</button>
+            <a href="https://ntfy.sh" target="_blank"
+              style="font-family:var(--mono);font-size:9px;color:var(--txt3);display:flex;align-items:center;margin-left:auto">ntfy.sh
+              ↗</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detection log -->
+      <div class="sec" style="border-bottom:none;padding-bottom:5px;flex-shrink:0">
+        <div class="sec-label">Detection log</div>
+      </div>
+      <div class="events-scroll" id="evList">
+        <div class="ev-empty" id="evEmpty">No detections yet.<br>Start stream to begin.</div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="map-wrap">
+        <div id="map"></div>
+        <div class="map-hud">
+          <div class="hud-chip">
+            <div>
+              <div class="hud-val" id="hudPot" style="color:var(--r)">0</div>
+              <div class="hud-sub">EVENTS</div>
+            </div>
+          </div>
+          <div class="hud-chip" id="hudGpsChip">
+            <div class="hud-gps-live">
+              <div class="hud-gps-dot" id="hudGpsDot"></div>
+              <div class="hud-gps" id="hudGps">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="video-panel" id="vidPanel">
+        <div class="scan" id="scanLine"></div>
+        <div class="det-flash" id="detFlash"></div>
+        <div class="corner-br" id="cornerBr">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+            <polyline points="0,15 0,0 15,0" fill="none" stroke="var(--b)" stroke-width=".5"
+              vector-effect="non-scaling-stroke" />
+            <polyline points="85,0 100,0 100,15" fill="none" stroke="var(--b)" stroke-width=".5"
+              vector-effect="non-scaling-stroke" />
+            <polyline points="0,85 0,100 15,100" fill="none" stroke="var(--b)" stroke-width=".5"
+              vector-effect="non-scaling-stroke" />
+            <polyline points="85,100 100,100 100,85" fill="none" stroke="var(--b)" stroke-width=".5"
+              vector-effect="non-scaling-stroke" />
+          </svg>
+        </div>
+
+        <div class="vid-empty" id="vidEmpty">
+          <div class="vid-empty-icon">📷</div>
+          <span>Press ▶ Start — or select Webcam / Rear camera above</span>
+        </div>
+        <canvas id="vc"></canvas>
+
+        <div class="vid-stats">
+          <span class="vstat" id="statRes">—</span>
+          <span class="vstat" id="statConn">DISCONNECTED</span>
+          <span class="vstat" id="statInf">ONNX DEMO</span>
+          <span class="vstat" id="statSrc">FILE</span>
+          <span class="vstat" id="statGps" style="display:none">GPS —</span>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" id="progFill" style="width:0%"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <!-- Modal -->
+  <div class="modal-bg" id="modalBg" onclick="maybeClose(event)">
+    <div class="modal">
+      <div class="modal-hdr">
+        <div class="modal-title" id="modalTitle">⚠ Road damage detected</div>
+        <button class="btn btn-ghost" style="font-size:11px" onclick="closeModal()">✕</button>
+      </div>
+      <img id="modalImg" class="modal-img" alt="">
+      <div class="modal-grid">
+        <div class="meta">
+          <div class="meta-k">Confidence</div>
+          <div class="meta-v" id="mConf">—</div>
+        </div>
+        <div class="meta">
+          <div class="meta-k">Class</div>
+          <div class="meta-v" id="mClass">—</div>
+        </div>
+        <div class="meta">
+          <div class="meta-k">Location</div>
+          <div class="meta-v" id="mLoc">—</div>
+        </div>
+        <div class="meta">
+          <div class="meta-k">Frame</div>
+          <div class="meta-v" id="mFrame">—</div>
+        </div>
+        <div class="meta">
+          <div class="meta-k">GPS source</div>
+          <div class="meta-v" id="mGpsSrc">—</div>
+        </div>
+        <div class="meta">
+          <div class="meta-k">Time</div>
+          <div class="meta-v" id="mTime">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = (() => { if (location.protocol === 'file:') return 'http://localhost:8000'; return location.origin; })();
+    const WS_URL = API.replace(/^http/, 'ws') + '/ws/stream';
+
+    let ws = null, map = null, carMarker = null;
+    let detectionCount = 0, fpsTs = [];
+    let streamSrc = 'file';
+    let webcamStream = null, webcamWs = null, webcamCapInterval = null;
+    let routePolyline = null;
+
+    // ── Live GPS (browser geolocation) ────────────────────────────────────
+    let liveGps = null;           // { lat, lng, accuracy, ts }
+    let geoWatchId = null;
+    let liveGpsEnabled = false;
+
+    function startLiveGps() {
+      if (!navigator.geolocation) {
+        setGpsStatus('err', 'Not supported');
+        return;
+      }
+      setGpsStatus('warn', 'Acquiring…');
+      geoWatchId = navigator.geolocation.watchPosition(
+        pos => {
+          liveGps = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
+            ts: Date.now()
+          };
+          liveGpsEnabled = true;
+          setGpsStatus('active', 'Live fix');
+          el('gpsCoordDisplay').textContent = `${liveGps.lat.toFixed(6)}, ${liveGps.lng.toFixed(6)}`;
+          el('gpsAccDisplay').textContent = `Accuracy: ±${Math.round(liveGps.accuracy)}m`;
+          el('hudGpsDot').classList.add('active');
+          el('statGps').style.display = '';
+          el('statGps').className = 'vstat gps-live-badge';
+          el('statGps').textContent = `GPS ±${Math.round(liveGps.accuracy)}m`;
+        },
+        err => {
+          liveGpsEnabled = false;
+          if (err.code === 1) {
+            setGpsStatus('err', 'Denied');
+            showToast('GPS denied', 'Allow location permission for live GPS tagging.', 'warn');
+          } else {
+            setGpsStatus('err', 'No signal');
+          }
+          el('hudGpsDot').classList.remove('active');
+        },
+        { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+      );
+    }
+
+    function stopLiveGps() {
+      if (geoWatchId !== null) {
+        navigator.geolocation.clearWatch(geoWatchId);
+        geoWatchId = null;
+      }
+      liveGpsEnabled = false;
+      liveGps = null;
+      setGpsStatus('', 'No fix');
+      el('gpsCoordDisplay').textContent = '—';
+      el('gpsAccDisplay').textContent = 'Accuracy: —';
+      el('hudGpsDot').classList.remove('active');
+      el('statGps').style.display = 'none';
+    }
+
+    function getCurrentGps(fallbackLat, fallbackLng) {
+      // For webcam/rear: always use live GPS if available
+      if ((streamSrc === 'webcam' || streamSrc === 'rear') && liveGpsEnabled && liveGps) {
+        return { lat: liveGps.lat, lng: liveGps.lng, source: 'live' };
+      }
+      // For file mode: use interpolated or fallback
+      return { lat: fallbackLat || 18.5204, lng: fallbackLng || 73.8567, source: 'interpolated' };
+    }
+
+    function setGpsStatus(state, txt) {
+      el('gpsDot').className = 'gps-dot' + (state ? ' ' + state : '');
+      el('gpsTxt').textContent = txt;
+    }
+
+    // Download a GPS template JSON that matches backend format
+    function downloadGpsTemplate() {
+      const template = [
+        { "lat": 18.5204, "lng": 73.8567, "note": "Start — replace with your route" },
+        { "lat": 18.5220, "lng": 73.8590 },
+        { "lat": 18.5245, "lng": 73.8610 },
+        { "lat": 18.5270, "lng": 73.8640 },
+        { "lat": 18.5290, "lng": 73.8660, "note": "End" }
+      ];
+      const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'gps_waypoints_template.json';
+      a.click();
+      showToast('Template downloaded', 'Edit lat/lng to match your video route, then upload.', 'info');
+    }
+
+    // ── Map ──────────────────────────────────────────────────────────────
+    function initMap() {
+      if (map) { map.remove(); map = null; }
+      const dark = document.documentElement.dataset.theme === 'dark';
+      map = L.map('map', { zoomControl: false }).setView([18.5204, 73.8567], 15);
+      L.tileLayer(
+        dark ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+          : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        { attribution: '© OpenStreetMap © CARTO', maxZoom: 19 }
+      ).addTo(map);
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+      // Smaller car marker (16px)
+      const carHtml = `<div style="width:16px;height:16px;background:var(--b);border-radius:50%;border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:8px;box-shadow:0 0 6px var(--b)">🚗</div>`;
+      carMarker = L.marker([18.5204, 73.8567], { icon: L.divIcon({ html: carHtml, iconSize: [16, 16], iconAnchor: [8, 8], className: '' }) }).addTo(map);
+      routePolyline = L.polyline([], { color: 'var(--b)', weight: 2, opacity: .5, dashArray: '5 5' }).addTo(map);
+    }
+
+    // ── Source switching ──────────────────────────────────────────────────
+    function setSrc(src) {
+      streamSrc = src;
+      ['file', 'webcam', 'rear'].forEach(s => {
+        el('src' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.toggle('active', s === src);
+      });
+      el('camSelectWrap').style.display = (src === 'webcam' || src === 'rear') ? 'block' : 'none';
+      el('statSrc').textContent = src.toUpperCase();
+
+      // Show GPS info banner only for file mode
+      el('gpsFileInfo').style.display = src === 'file' ? '' : 'none';
+
+      if (src === 'webcam' || src === 'rear') {
+        enumerateCameras(src);
+        startLiveGps();
+      } else {
+        stopLiveGps();
+      }
+    }
+
+    async function enumerateCameras(prefer) {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cams = devices.filter(d => d.kind === 'videoinput');
+        const sel = el('camSelect');
+        sel.innerHTML = '';
+        cams.forEach((cam, i) => {
+          const opt = document.createElement('option');
+          opt.value = cam.deviceId;
+          const lbl = cam.label || `Camera ${i + 1}`;
+          opt.text = lbl;
+          if (prefer === 'rear' && /back|rear|environment/i.test(lbl)) opt.selected = true;
+          sel.appendChild(opt);
+        });
+        if (!sel.options.length) { const opt = document.createElement('option'); opt.text = 'No cameras found'; sel.appendChild(opt); }
+      } catch (e) { showToast('Camera access denied', 'Enable camera permissions and refresh.', 'warn'); }
+    }
+
+    // ── Webcam → WebSocket ─────────────────────────────────────────────────
+    async function startWebcamStream() {
+      stopWebcamStream();
+      const deviceId = el('camSelect')?.value;
+      const constraints = {
+        video: {
+          width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 25 },
+          ...(deviceId ? { deviceId: { exact: deviceId } }
+            : (streamSrc === 'rear' ? { facingMode: { exact: 'environment' } } : { facingMode: 'user' }))
+        }
+      };
+      try { webcamStream = await navigator.mediaDevices.getUserMedia(constraints); }
+      catch (e) {
+        try { webcamStream = await navigator.mediaDevices.getUserMedia({ video: true }); }
+        catch (e2) { showToast('Camera error', e2.message, 'error'); return; }
+      }
+
+      // Ensure live GPS is running
+      if (!liveGpsEnabled) startLiveGps();
+
+      el('vidEmpty').style.display = 'none';
+      el('vc').style.display = 'block';
+      el('scanLine').classList.add('on');
+      el('cornerBr').classList.add('on');
+      el('statSrc').textContent = streamSrc === 'rear' ? 'REAR CAM' : 'WEBCAM';
+      el('statConn').textContent = 'CONNECTING…';
+
+      webcamWs = new WebSocket(WS_URL + '?src=webcam');
+      webcamWs.onopen = () => { setConn('live', 'LIVE'); el('statConn').className = 'vstat live-badge webcam-badge'; el('statConn').textContent = 'WEBCAM LIVE'; startSendingFrames(); };
+      webcamWs.onmessage = e => onFrame(JSON.parse(e.data));
+      webcamWs.onclose = () => { setConn('', 'IDLE'); el('statConn').className = 'vstat'; el('statConn').textContent = 'DISCONNECTED'; };
+      webcamWs.onerror = () => { setConn('err', 'ERROR'); showToast('WebSocket error', 'Cannot reach backend.', 'error'); };
+      ws = webcamWs;
+    }
+
+    function startSendingFrames() {
+      const video = document.createElement('video');
+      video.srcObject = webcamStream;
+      video.play();
+      const captureCanvas = document.createElement('canvas');
+      let captureCtx = null;
+      webcamCapInterval = setInterval(() => {
+        if (!webcamStream || webcamWs?.readyState !== 1) return;
+        if (!video.videoWidth) return;
+        if (captureCanvas.width !== video.videoWidth) {
+          captureCanvas.width = video.videoWidth;
+          captureCanvas.height = video.videoHeight;
+          captureCtx = captureCanvas.getContext('2d');
+        }
+        captureCtx.drawImage(video, 0, 0);
+        captureCanvas.toBlob(blob => {
+          if (blob && webcamWs?.readyState === 1) webcamWs.send(blob);
+        }, 'image/jpeg', 0.7);
+      }, 1000 / 15);
+    }
+
+    function stopWebcamStream() {
+      if (webcamStream) { webcamStream.getTracks().forEach(t => t.stop()); webcamStream = null; }
+      if (webcamCapInterval) { clearInterval(webcamCapInterval); webcamCapInterval = null; }
+      webcamWs = null;
+    }
+
+    // ── Stream ────────────────────────────────────────────────────────────
+    function startStream() {
+      detectionCount = 0;
+      el('evList').innerHTML = '<div class="ev-empty" id="evEmpty">Loading…</div>';
+      el('btnStart').style.display = 'none';
+      el('btnStop').style.display = 'inline-flex';
+
+      if (streamSrc === 'webcam' || streamSrc === 'rear') {
+        startWebcamStream(); return;
+      }
+
+      // File mode
+      stopWebcamStream();
+      stopLiveGps();
+      if (ws) ws.close();
+      setConn('connecting', 'CONNECTING');
+      el('vidEmpty').style.display = 'none';
+      el('vc').style.display = 'block';
+      el('scanLine').classList.add('on');
+      el('cornerBr').classList.add('on');
+      el('statSrc').textContent = 'FILE';
+      el('statConn').textContent = 'CONNECTING…';
+      el('gpsFileInfo').style.display = '';
+
+      ws = new WebSocket(WS_URL);
+      ws.onopen = () => { setConn('live', 'LIVE'); el('statConn').className = 'vstat live-badge'; el('statConn').textContent = 'LIVE'; };
+      ws.onmessage = e => onFrame(JSON.parse(e.data));
+      ws.onclose = () => { setConn('', 'IDLE'); el('statConn').className = 'vstat'; el('statConn').textContent = 'DISCONNECTED'; };
+      ws.onerror = () => {
+        setConn('err', 'ERROR'); el('statConn').textContent = 'ERROR';
+        showToast('Backend offline', 'Run: python backend/app.py', 'error');
+      };
+    }
+
+    function stopStream() {
+      if (ws) { ws.close(); ws = null; }
+      stopWebcamStream();
+      setConn('', 'IDLE');
+      el('btnStart').style.display = 'inline-flex';
+      el('btnStop').style.display = 'none';
+      el('scanLine').classList.remove('on');
+      el('cornerBr').classList.remove('on');
+    }
+
+    // ── Frame handler ──────────────────────────────────────────────────────
+    const _img = new Image();
+    function onFrame(d) {
+      if (d.error) { showToast('Stream error', d.error, 'error'); stopStream(); return; }
+      if (d.done) {
+        showToast('Video complete', `Processed ${d.frame_idx || 0} frames · ${detectionCount} detections`, 'success');
+        stopStream();
+        return;
+      }
+
+      const now = Date.now();
+      fpsTs.push(now);
+      fpsTs = fpsTs.filter(t => now - t < 1000);
+
+      // GPS: for webcam/rear use live browser GPS; for file use backend-provided GPS
+      let gps = d.gps || {};
+      let gpsSrc = 'interpolated';
+      if ((streamSrc === 'webcam' || streamSrc === 'rear') && liveGpsEnabled && liveGps) {
+        gps = { lat: liveGps.lat, lng: liveGps.lng };
+        gpsSrc = `live ±${Math.round(liveGps.accuracy)}m`;
+      }
+
+      const total = d.total_frames || 1;
+
+      _img.onload = () => {
+        const cv = el('vc');
+        if (cv.width !== _img.width) cv.width = _img.width;
+        if (cv.height !== _img.height) cv.height = _img.height;
+        cv.getContext('2d').drawImage(_img, 0, 0);
+        el('statRes').textContent = `${_img.width}×${_img.height}`;
+      };
+      _img.src = 'data:image/jpeg;base64,' + d.frame;
+
+      if (d.event) {
+        // Override event GPS with live GPS if on webcam
+        if ((streamSrc === 'webcam' || streamSrc === 'rear') && liveGpsEnabled && liveGps) {
+          d.event.lat = liveGps.lat;
+          d.event.lng = liveGps.lng;
+          d.event.gps_source = gpsSrc;
+        } else {
+          d.event.gps_source = gpsSrc;
+        }
+
+        detectionCount++;
+        addPothole(d.event);
+        addEvItem(d.event);
+        flashDet();
+        el('kpiPot').classList.remove('flash-r'); void el('kpiPot').offsetWidth; el('kpiPot').classList.add('flash-r');
+        el('numConf').textContent = (d.event.conf * 100).toFixed(0) + '%';
+        el('statInf').textContent = `${d.event.class_name?.toUpperCase() || 'POTHOLE'} ${(d.event.conf * 100).toFixed(0)}%`;
+        showDetectionToast(d.event);
+      }
+
+      el('numPot').textContent = detectionCount;
+      el('numFrame').textContent = d.frame_idx || 0;
+      el('numFps').textContent = fpsTs.length;
+      el('hudPot').textContent = detectionCount;
+
+      if (gps.lat) {
+        const ll = [gps.lat, gps.lng];
+        carMarker.setLatLng(ll);
+        map.panTo(ll, { animate: true, duration: .2 });
+        el('hudGps').textContent = `${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)}`;
+        const lls = routePolyline.getLatLngs();
+        lls.push(L.latLng(ll[0], ll[1]));
+        if (lls.length > 500) lls.shift();
+        routePolyline.setLatLngs(lls);
+      }
+
+      el('progFill').style.width = Math.min((d.frame_idx || 0) / total * 100, 100) + '%';
+    }
+
+    // ── Map markers (smaller pins) ─────────────────────────────────────────
+    const CLASS_COLORS = { 'pothole': '#ff3b30', 'crack': '#ff9f0a', 'longitudinal-crack': '#0a84ff', 'transverse-crack': '#bf5af2', 'alligator-crack': '#ff375f', 'repair-patch': '#30d158', 'manhole': '#64d2ff', 'subsidence': '#ffd60a' };
+    function classColor(n) { return CLASS_COLORS[n] || '#ff3b30'; }
+
+    function addPothole(ev) {
+      const c = classColor(ev.class_name);
+      // Smaller pin: 12px circle
+      const html = `<div style="width:12px;height:12px;background:${c};border-radius:50%;border:1.5px solid rgba(255,255,255,.4);cursor:pointer;box-shadow:0 0 5px ${c}66"></div>`;
+      const m = L.marker([ev.lat, ev.lng], { icon: L.divIcon({ html, iconSize: [12, 12], iconAnchor: [6, 6], className: '' }) });
+      const gpsSrcLabel = ev.gps_source ? `<span style="font-size:9px;color:#7c8494"> · ${ev.gps_source}</span>` : '';
+      m.bindPopup(`<div class="popup-inner">
+        ${ev.thumb ? `<img class="popup-img" src="data:image/jpeg;base64,${ev.thumb}">` : ''}
+        <div class="popup-title">⚠ ${(ev.class_name || 'Pothole')} #${ev.id + 1}</div>
+        <div class="popup-sub">${(ev.conf * 100).toFixed(0)}% conf · frame ${ev.frame}${gpsSrcLabel}</div>
+      </div>`, { maxWidth: 220 });
+      m.on('click', () => openModal(ev));
+      m.addTo(map);
+    }
+
+    // ── Toast ──────────────────────────────────────────────────────────────
+    let lastToastTime = 0;
+    function showDetectionToast(ev) {
+      const now = Date.now(); if (now - lastToastTime < 4000) return; lastToastTime = now;
+      const name = (ev.class_name || 'Pothole').replace(/-/g, ' ');
+      showToast(`⚠ ${name.charAt(0).toUpperCase() + name.slice(1)} detected`, `Conf: ${(ev.conf * 100).toFixed(0)}%\n${ev.lat.toFixed(5)}, ${ev.lng.toFixed(5)}\nGPS: ${ev.gps_source || 'interpolated'}`, 'detection', classColor(ev.class_name), ev);
+    }
+
+    function showToast(title, body, type = 'info', color = null, ev = null) {
+      const c = el('toast-container');
+      const div = document.createElement('div'); div.className = 'toast';
+      const icon = type === 'error' ? '🔴' : type === 'warn' ? '🟡' : type === 'detection' ? '⚠' : type === 'success' ? '✅' : 'ℹ️';
+      const bc = color || (type === 'error' ? 'var(--r)' : type === 'detection' ? 'var(--r)' : type === 'success' ? 'var(--g)' : 'var(--border2)');
+      div.style.borderLeftColor = bc; div.style.borderLeftWidth = '3px';
+      div.innerHTML = `<div class="toast-title">${icon} ${title}<span class="toast-close" onclick="this.closest('.toast').remove()">✕</span></div>
+      <div class="toast-body" style="white-space:pre-line">${body}</div>
+      ${ev ? `<div style="margin-top:6px"><button onclick="openModal(window._lastEv)" class="btn btn-ghost" style="font-size:10px;padding:3px 8px">View →</button></div>` : ''}`;
+      if (ev) window._lastEv = ev;
+      c.appendChild(div);
+      setTimeout(() => div.remove(), 7000);
+      while (c.children.length > 4) c.firstChild.remove();
+    }
+
+    // ── Event log ──────────────────────────────────────────────────────────
+    function addEvItem(ev) {
+      const empty = el('evEmpty'); if (empty) empty.remove();
+      const badge = ev.conf > .7 ? 'badge-r' : ev.conf > .5 ? 'badge-o' : 'badge-g';
+      const d = document.createElement('div'); d.className = 'ev-item'; d.onclick = () => openModal(ev);
+      d.innerHTML = `${ev.thumb ? `<img class="ev-thumb" src="data:image/jpeg;base64,${ev.thumb}">` : '<div class="ev-thumb" style="background:var(--bg3)"></div>'}
+      <div class="ev-body">
+        <div class="ev-title">${(ev.class_name || 'Pothole').replace(/-/g, ' ')} #${ev.id + 1}</div>
+        <div class="ev-sub">${ev.lat.toFixed(5)}, ${ev.lng.toFixed(5)} · ${ev.gps_source || 'interp'}</div>
+      </div>
+      <span class="badge ${badge}">${(ev.conf * 100).toFixed(0)}%</span>`;
+      el('evList').prepend(d);
+    }
+
+    function flashDet() { const f = el('detFlash'); f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop'); }
+
+    // ── Modal ──────────────────────────────────────────────────────────────
+    function openModal(ev) {
+      el('modalImg').src = ev.thumb ? 'data:image/jpeg;base64,' + ev.thumb : '';
+      el('modalTitle').textContent = `⚠ ${(ev.class_name || 'Pothole').replace(/-/g, ' ')} detected`;
+      el('mConf').textContent = (ev.conf * 100).toFixed(1) + '%';
+      el('mClass').textContent = ev.class_name || 'pothole';
+      el('mLoc').textContent = `${ev.lat.toFixed(5)}, ${ev.lng.toFixed(5)}`;
+      el('mFrame').textContent = ev.frame;
+      el('mGpsSrc').textContent = ev.gps_source || 'interpolated';
+      el('mTime').textContent = new Date(ev.ts * 1000).toLocaleTimeString();
+      el('modalBg').classList.add('open');
+    }
+    function closeModal() { el('modalBg').classList.remove('open'); }
+    function maybeClose(e) { if (e.target === el('modalBg')) closeModal(); }
+
+    // ── Uploads ────────────────────────────────────────────────────────────
+    async function uploadVideo(inp) {
+      const f = inp.files[0]; if (!f) return;
+      const fd = new FormData(); fd.append('file', f);
+      const r = await fetch(API + '/upload/video', { method: 'POST', body: fd }).catch(() => null);
+      if (r?.ok) { el('vidName').textContent = f.name; el('uplVid').classList.add('ok'); setSrc('file'); }
+      else showToast('Upload failed', 'Check backend connection.', 'error');
+    }
+    async function uploadModel(inp) {
+      const f = inp.files[0]; if (!f) return;
+      const fd = new FormData(); fd.append('file', f);
+      const r = await fetch(API + '/upload/model', { method: 'POST', body: fd }).catch(() => null);
+      if (r?.ok) {
+        el('mdlName').textContent = f.name; el('uplMdl').classList.add('ok');
+        const data = await r.json();
+        const ep = data.providers?.[0] || 'CPU';
+        el('statInf').textContent = ep.includes('CoreML') ? 'COREML ✓' : ep.includes('CUDA') ? 'CUDA ✓' : 'ONNX CPU';
+        showToast('Model loaded', `${f.name}\n${ep}`, 'success');
+      }
+    }
+    async function uploadGPS(inp) {
+      const f = inp.files[0]; if (!f) return;
+      let pts; try { pts = JSON.parse(await f.text()); } catch { showToast('GPS error', 'Invalid JSON file', 'error'); return; }
+      const r = await fetch(API + '/upload/waypoints', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pts) }).catch(() => null);
+      if (r?.ok) {
+        el('gpsName').textContent = f.name; el('uplGps').classList.add('ok');
+        const ll = pts.map(p => [p.lat, p.lng]);
+        L.polyline(ll, { color: 'var(--b)', weight: 2, opacity: .5, dashArray: '5 5' }).addTo(map);
+        map.fitBounds(L.latLngBounds(ll), { padding: [20, 20] });
+        el('gpsFileInfo').style.display = 'none'; // Hide warning once real GPS loaded
+        showToast('GPS loaded', `${pts.length} waypoints`, 'success');
+      }
+    }
+
+    // ── Notifications ──────────────────────────────────────────────────────
+    async function saveNotifConfig() {
+      const cfg = { smtp_host: el('cfgSmtpHost').value.trim() || 'smtp.gmail.com', smtp_user: el('cfgEmail').value.trim(), smtp_pass: el('cfgPass').value, alert_to: el('cfgAlertTo').value.trim(), ntfy_topic: el('cfgNtfy').value.trim() };
+      const r = await fetch(API + '/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) }).catch(() => null);
+      if (r?.ok) { const data = await r.json(); updateNotifBadge(data.notifier_enabled); showToast('Notifications saved', data.notifier_enabled ? 'Email alerts active' : 'ntfy.sh only (no SMTP)', 'success'); }
+      else showToast('Save failed', 'Backend unreachable', 'error');
+    }
+    async function testNotif() {
+      const r = await fetch(API + '/test-notification', { method: 'POST' }).catch(() => null);
+      if (r?.ok) { const d = await r.json(); showToast('Test sent', `email:${d.enabled} ntfy:${d.ntfy}`, 'success'); }
+      else showToast('Test failed', 'Save config first', 'error');
+    }
+    function updateNotifBadge(on) { const b = el('notifBadge'); b.textContent = on ? 'ON' : 'OFF'; b.className = 'notif-badge ' + (on ? 'on' : 'off'); }
+
+    // ── Theme ──────────────────────────────────────────────────────────────
+    function toggleTheme() {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      document.documentElement.dataset.theme = dark ? 'light' : 'dark';
+      el('themeBtn').textContent = dark ? '🌙' : '☀️';
+      initMap();
+    }
+
+    function setConn(cls, txt) { el('connDot').className = 'conn-dot ' + cls; el('connTxt').textContent = txt; }
+    function el(id) { return document.getElementById(id); }
+
+    async function checkHealth() {
+      try {
+        const r = await fetch(API + '/health', { signal: AbortSignal.timeout(3000) });
+        if (r.ok) {
+          const d = await r.json();
+          const ep = d.providers?.[0] || 'CPU';
+          el('statInf').textContent = d.model_loaded ? (ep.includes('CoreML') ? 'COREML ✓' : ep.includes('CUDA') ? 'CUDA ✓' : 'ONNX CPU') : 'DEMO MODE';
+          setConn('', 'READY'); updateNotifBadge(d.notifier_on);
+        }
+      } catch { setConn('err', 'BACKEND OFFLINE'); el('statInf').textContent = 'OFFLINE'; showToast('Backend offline', 'Run: python backend/app.py\nor: uvicorn app:app --port 8000', 'warn'); }
+    }
+
+    initMap();
+    checkHealth();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: roadvision-backend:latest
+    container_name: roadvision-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist uploads and models outside the container
+      - ./uploads:/app/uploads
+      - ./models:/app/models
+    environment:
+      STREAM_FPS: "25"
+      INFERENCE_SKIP: "2"     # Run inference every 2nd frame → ~12 inferences/s at 25 fps
+      JPEG_QUALITY: "72"
+      CONFIDENCE_THRESHOLD: "0.35"
+      PORT: "8000"
+    # Resource limits — tune to your machine
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: "2G"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+# Optional: uncomment to run the frontend via nginx
+#  frontend:
+#    image: nginx:alpine
+#    container_name: roadvision-frontend
+#    ports:
+#      - "3000:80"
+#    volumes:
+#      - ./frontend:/usr/share/nginx/html:ro
