@@ -85,11 +85,57 @@
       font: inherit;
     }
 
+    /* ── Mode banner ── */
+    .mode-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9000;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 10px;
+      transition: transform .4s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .mode-banner.demo {
+      background: rgba(255, 159, 10, .12);
+      border-bottom: 1px solid rgba(255, 159, 10, .3);
+      color: var(--o);
+    }
+
+    .mode-banner.server {
+      background: rgba(48, 209, 88, .1);
+      border-bottom: 1px solid rgba(48, 209, 88, .25);
+      color: var(--g);
+    }
+
+    .mode-banner.hidden {
+      transform: translateY(-100%);
+    }
+
+    .mode-banner-close {
+      margin-left: auto;
+      cursor: pointer;
+      opacity: .6;
+    }
+
+    .mode-banner-close:hover {
+      opacity: 1;
+    }
+
     .shell {
       display: grid;
       grid-template-columns: 280px 1fr;
       grid-template-rows: 48px 1fr;
       height: 100dvh;
+    }
+
+    .shell.banner-visible {
+      padding-top: 32px;
     }
 
     .topbar {
@@ -120,6 +166,56 @@
       background: var(--b);
       clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
       flex-shrink: 0;
+    }
+
+    /* mode pill in topbar */
+    .mode-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-family: var(--mono);
+      font-size: 10px;
+      border: 1px solid;
+      cursor: pointer;
+      transition: all var(--t);
+    }
+
+    .mode-pill.demo {
+      background: rgba(255, 159, 10, .1);
+      border-color: rgba(255, 159, 10, .35);
+      color: var(--o);
+    }
+
+    .mode-pill.demo:hover {
+      background: rgba(255, 159, 10, .2);
+    }
+
+    .mode-pill.server {
+      background: rgba(10, 132, 255, .1);
+      border-color: rgba(10, 132, 255, .35);
+      color: var(--b);
+    }
+
+    .mode-pill.server:hover {
+      background: rgba(10, 132, 255, .2);
+    }
+
+    .mode-pill-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .mode-pill.demo .mode-pill-dot {
+      background: var(--o);
+    }
+
+    .mode-pill.server .mode-pill-dot {
+      background: var(--b);
+      animation: blink 2s infinite;
     }
 
     .conn-pill {
@@ -354,7 +450,6 @@
       font-weight: 500;
     }
 
-    /* GPS live indicator */
     .gps-status {
       display: flex;
       align-items: center;
@@ -395,7 +490,6 @@
       font-size: 9px;
     }
 
-    /* GPS info banner */
     .gps-info {
       padding: 6px 9px;
       background: rgba(255, 159, 10, .07);
@@ -404,6 +498,25 @@
       font-size: 10px;
       color: var(--o);
       line-height: 1.5;
+    }
+
+    /* ── Demo mode notice ── */
+    .demo-notice {
+      padding: 8px 10px;
+      background: rgba(255, 159, 10, .07);
+      border: 1px solid rgba(255, 159, 10, .2);
+      border-radius: 7px;
+      font-size: 10px;
+      color: var(--o);
+      line-height: 1.6;
+    }
+
+    .demo-notice strong {
+      display: block;
+      margin-bottom: 2px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .08em;
     }
 
     .cam-select {
@@ -462,6 +575,11 @@
       border-color: rgba(48, 209, 88, .4);
       color: var(--g);
       background: rgba(48, 209, 88, .05);
+    }
+
+    .upl.disabled {
+      opacity: .4;
+      pointer-events: none;
     }
 
     .upl-name {
@@ -696,7 +814,6 @@
       letter-spacing: .04em;
     }
 
-    /* Live GPS HUD indicator */
     .hud-gps-live {
       display: flex;
       align-items: center;
@@ -714,6 +831,23 @@
     .hud-gps-dot.active {
       background: var(--g);
       animation: blink 2s infinite;
+    }
+
+    /* demo mode map badge */
+    .map-demo-badge {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      z-index: 500;
+      background: rgba(255, 159, 10, .18);
+      border: 1px solid rgba(255, 159, 10, .4);
+      color: var(--o);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .06em;
+      padding: 4px 9px;
+      border-radius: 5px;
+      pointer-events: none;
     }
 
     .video-panel {
@@ -865,6 +999,12 @@
       background: rgba(48, 209, 88, .2);
       color: var(--g);
       border: 1px solid rgba(48, 209, 88, .3);
+    }
+
+    .vstat.demo-badge {
+      background: rgba(255, 159, 10, .2);
+      color: var(--o);
+      border: 1px solid rgba(255, 159, 10, .3);
     }
 
     .vstat.webcam-badge {
@@ -1069,6 +1209,62 @@
       color: var(--txt);
     }
 
+    /* mode switch modal */
+    .mode-switch-modal {
+      background: var(--bg1);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      padding: 20px;
+      width: min(420px, 92vw);
+    }
+
+    .mode-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .mode-card {
+      padding: 14px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: all var(--t);
+    }
+
+    .mode-card:hover {
+      border-color: var(--b);
+      background: rgba(10, 132, 255, .05);
+    }
+
+    .mode-card.active {
+      border-color: var(--b);
+      background: rgba(10, 132, 255, .08);
+    }
+
+    .mode-card-icon {
+      font-size: 22px;
+      margin-bottom: 7px;
+    }
+
+    .mode-card-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .mode-card-desc {
+      font-size: 10px;
+      color: var(--txt2);
+      line-height: 1.5;
+    }
+
+    .mode-card.demo-card.active {
+      border-color: var(--o);
+      background: rgba(255, 159, 10, .07);
+    }
+
     @media(max-width:700px) {
       .shell {
         grid-template-columns: 1fr
@@ -1082,7 +1278,16 @@
 </head>
 
 <body>
-  <div class="shell">
+
+  <!-- Mode banner -->
+  <div class="mode-banner demo" id="modeBanner">
+    <span id="modeBannerIcon">⚠</span>
+    <span id="modeBannerTxt">DEMO MODE — No backend detected. Running with simulated detections. <strong
+        style="font-weight:700">Run <code>python backend/app.py</code> to enable real AI inference.</strong></span>
+    <span class="mode-banner-close" onclick="dismissBanner()">✕</span>
+  </div>
+
+  <div class="shell" id="shell">
 
     <!-- Topbar -->
     <header class="topbar">
@@ -1090,6 +1295,13 @@
         <div class="logo-mark"></div>
         ROADVISIONAI
       </div>
+
+      <!-- Mode pill — click to switch -->
+      <div class="mode-pill demo" id="modePill" onclick="openModeModal()">
+        <div class="mode-pill-dot"></div>
+        <span id="modePillTxt">DEMO</span>
+      </div>
+
       <div class="conn-pill">
         <div class="conn-dot" id="connDot"></div>
         <span id="connTxt">IDLE</span>
@@ -1112,14 +1324,12 @@
             style="display:none;position:absolute;top:34px;right:0;min-width:150px;background:var(--bg1);border:1px solid var(--border2);border-radius:8px;overflow:hidden;z-index:400;box-shadow:0 8px 24px rgba(0,0,0,.35)">
             <button onclick="exportCSV()"
               style="display:block;width:100%;text-align:left;padding:8px 13px;font-size:11px;font-family:var(--mono);color:var(--txt);border-bottom:1px solid var(--border);background:none;cursor:pointer"
-              onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
-              📄 Download CSV
-            </button>
+              onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">📄 Download
+              CSV</button>
             <button onclick="exportGeoJSON()"
               style="display:block;width:100%;text-align:left;padding:8px 13px;font-size:11px;font-family:var(--mono);color:var(--txt);background:none;cursor:pointer"
-              onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
-              🗺 Download GeoJSON
-            </button>
+              onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">🗺 Download
+              GeoJSON</button>
           </div>
         </div>
         <button class="btn btn-primary" id="btnStart" onclick="startStream()">▶ Start</button>
@@ -1161,7 +1371,7 @@
         </div>
       </div>
 
-      <!-- Confidence slider — add after Detection Stats sec -->
+      <!-- Confidence slider -->
       <div class="sec">
         <div class="sec-label" style="display:flex;align-items:center;justify-content:space-between">
           Confidence threshold
@@ -1192,7 +1402,6 @@
           </div>
           <div class="gps-val" id="gpsAccDisplay" style="font-family:var(--mono);font-size:9px;color:var(--txt3)">
             Accuracy: —</div>
-          <!-- Info about file mode GPS -->
           <div class="gps-info" id="gpsFileInfo" style="display:none">
             ⚠ File mode uses interpolated waypoints.<br>
             Upload a real GPS .json for accuracy.<br>
@@ -1204,7 +1413,18 @@
 
       <!-- Sources -->
       <div class="sec">
-        <div class="sec-label">Sources</div>
+        <div class="sec-label" style="display:flex;align-items:center;justify-content:space-between">
+          Sources
+          <span id="serverOnlyNote" style="font-family:var(--mono);font-size:9px;color:var(--txt3)"></span>
+        </div>
+
+        <!-- Demo mode notice -->
+        <div class="demo-notice" id="demoUploadNotice" style="display:none;margin-bottom:8px">
+          <strong>⚡ DEMO MODE</strong>
+          File upload requires the backend server.<br>
+          Switch to Server mode or webcam for live detection.
+        </div>
+
         <div class="upload-list">
           <label class="upl" id="uplVid" for="inVid">
             <span>📹</span>
@@ -1226,11 +1446,13 @@
         </div>
       </div>
 
-      <!-- Notifications -->
-      <div class="sec">
+      <!-- Notifications (server only) -->
+      <div class="sec" id="notifSec">
         <div class="sec-label" style="display:flex;align-items:center;gap:6px">
           Notifications
           <span class="notif-badge off" id="notifBadge">OFF</span>
+          <span id="notifServerOnly"
+            style="font-family:var(--mono);font-size:9px;color:var(--txt3);margin-left:auto"></span>
         </div>
         <div class="notif-form">
           <div class="notif-row">
@@ -1269,7 +1491,7 @@
         <div class="sec-label">Detection log</div>
       </div>
       <div class="events-scroll" id="evList">
-        <div class="ev-empty" id="evEmpty">No detections yet.<br>Start stream to begin.</div>
+        <div class="ev-empty" id="evEmpty">No detections yet.<br>Press ▶ Start to begin.</div>
       </div>
     </aside>
 
@@ -1291,6 +1513,8 @@
             </div>
           </div>
         </div>
+        <!-- Demo badge on map -->
+        <div class="map-demo-badge" id="mapDemoBadge" style="display:none">⚡ SIMULATED GPS ROUTE</div>
       </div>
 
       <div class="video-panel" id="vidPanel">
@@ -1331,7 +1555,7 @@
 
   <div id="toast-container"></div>
 
-  <!-- Modal -->
+  <!-- Detection Modal -->
   <div class="modal-bg" id="modalBg" onclick="maybeClose(event)">
     <div class="modal">
       <div class="modal-hdr">
@@ -1368,36 +1592,386 @@
     </div>
   </div>
 
-  <script>
-    const API = 'http://localhost:8000';
-    const WS_URL = API.replace(/^http/, 'ws') + '/ws/stream';
+  <!-- Mode Switch Modal -->
+  <div class="modal-bg" id="modeSwitchBg" onclick="maybeCloseMode(event)">
+    <div class="mode-switch-modal">
+      <div class="modal-hdr">
+        <div class="modal-title">⚙ Select operating mode</div>
+        <button class="btn btn-ghost" style="font-size:11px" onclick="closeModeModal()">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--txt2);line-height:1.6">
+        Choose how RoadVisionAI connects to the inference backend.
+      </div>
+      <div class="mode-cards">
+        <div class="mode-card demo-card" id="modeCardDemo" onclick="setMode('demo')">
+          <div class="mode-card-icon">⚡</div>
+          <div class="mode-card-title" style="color:var(--o)">Demo / Offline</div>
+          <div class="mode-card-desc">Simulated detections, no backend needed. Great for UI exploration and GPS testing
+            via webcam.</div>
+        </div>
+        <div class="mode-card" id="modeCardServer" onclick="setMode('server')">
+          <div class="mode-card-icon">🧠</div>
+          <div class="mode-card-title" style="color:var(--b)">Server (AI)</div>
+          <div class="mode-card-desc">Real ONNX inference via <code style="font-size:9px">localhost:8000</code>.
+            Requires <code style="font-size:9px">python backend/app.py</code>.</div>
+          <div id="serverStatusInModal" style="margin-top:8px;font-family:var(--mono);font-size:9px;color:var(--txt3)">
+            Checking…</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-family:var(--mono);font-size:9px;color:var(--txt3)">
+        To start backend: <code>cd backend && python app.py</code> or use <code>./run-native.sh</code>
+      </div>
+    </div>
+  </div>
 
+  <script>
+    // ══════════════════════════════════════════════════════════════════
+    // CONFIG & STATE
+    // ══════════════════════════════════════════════════════════════════
+
+    // Always point to backend port 8000 regardless of how the frontend is served
+    const API = 'http://localhost:8000';
+    const WS_URL = 'ws://localhost:8000/ws/stream';
+
+    // ── Mode: 'demo' | 'server' ──
+    let appMode = 'demo';    // start in demo, upgrade to server if backend found
+    let serverAvailable = false;
+
+    // ── App state ──
+    let pothole_events = [];   // FIX: was never declared — export was broken
     let ws = null, map = null, carMarker = null, heatLayer = null;
     let detectionCount = 0, fpsTs = [];
     let streamSrc = 'file';
     let webcamStream = null, webcamWs = null, webcamCapInterval = null;
     let routePolyline = null;
-    let pothole_events = [];
+    let demoInterval = null;
 
-    // ── Live GPS (browser geolocation) ────────────────────────────────────
-    let liveGps = null;           // { lat, lng, accuracy, ts }
+    // ── Live GPS ──
+    let liveGps = null;
     let geoWatchId = null;
     let liveGpsEnabled = false;
 
-    function startLiveGps() {
-      if (!navigator.geolocation) {
-        setGpsStatus('err', 'Not supported');
-        return;
+    // Demo GPS route (Pune, India area)
+    const DEMO_ROUTE = [
+      { lat: 18.5204, lng: 73.8567 }, { lat: 18.5215, lng: 73.8580 }, { lat: 18.5228, lng: 73.8598 },
+      { lat: 18.5242, lng: 73.8612 }, { lat: 18.5255, lng: 73.8628 }, { lat: 18.5269, lng: 73.8643 },
+      { lat: 18.5282, lng: 73.8657 }, { lat: 18.5296, lng: 73.8671 }, { lat: 18.5310, lng: 73.8685 },
+      { lat: 18.5290, lng: 73.8700 }, { lat: 18.5270, lng: 73.8715 }, { lat: 18.5250, lng: 73.8730 },
+    ];
+    const CLASS_NAMES_DEMO = ['D00', 'D20', 'D50', 'D40', 'D10'];
+    const CLASS_NAMES = CLASS_NAMES_DEMO;
+
+    // ══════════════════════════════════════════════════════════════════
+    // MODE MANAGEMENT
+    // ══════════════════════════════════════════════════════════════════
+
+    async function probeBackend() {
+      try {
+        const r = await fetch(API + '/health', { signal: AbortSignal.timeout(2500) });
+        if (r.ok) {
+          serverAvailable = true;
+          return true;
+        }
+      } catch { }
+      serverAvailable = false;
+      return false;
+    }
+
+    async function checkHealth() {
+      const ok = await probeBackend();
+      if (ok) {
+        // Auto-upgrade to server mode
+        if (appMode === 'demo') {
+          await setMode('server', true);
+        }
+        try {
+          const [hr, sr] = await Promise.all([
+            fetch(API + '/health', { signal: AbortSignal.timeout(3000) }),
+            fetch(API + '/state', { signal: AbortSignal.timeout(3000) })
+          ]);
+          if (hr.ok) {
+            const d = await hr.json();
+            const ep = d.providers?.[0] || 'CPU';
+            el('statInf').textContent = d.model_loaded
+              ? (ep.includes('CoreML') ? 'COREML ✓' : ep.includes('CUDA') ? 'CUDA ✓' : 'ONNX CPU')
+              : 'NO MODEL';
+            updateNotifBadge(d.notifier_on);
+          }
+          if (sr.ok) {
+            const s = await sr.json();
+            if (s.model_file) { el('mdlName').textContent = s.model_file; el('uplMdl').classList.add('ok'); }
+            if (s.video_file) { el('vidName').textContent = s.video_file; el('uplVid').classList.add('ok'); }
+            if (s.waypoints_count > 2) { el('gpsName').textContent = `${s.waypoints_count} waypoints loaded`; el('uplGps').classList.add('ok'); el('gpsFileInfo').style.display = 'none'; }
+            if (s.conf_threshold) { const pct = Math.round(s.conf_threshold * 100); el('confSlider').value = pct; el('confValDisplay').textContent = pct + '%'; }
+          }
+        } catch { }
+      } else {
+        applyDemoMode();
       }
+    }
+
+    async function setMode(mode, silent = false) {
+      if (mode === 'server') {
+        const ok = await probeBackend();
+        if (!ok) {
+          showToast('Backend not found', 'Run: python backend/app.py\nThen click Server mode again.', 'error');
+          el('serverStatusInModal').textContent = '✕ Not reachable at localhost:8000';
+          el('serverStatusInModal').style.color = 'var(--r)';
+          return;
+        }
+        appMode = 'server';
+        applyServerMode(silent);
+      } else {
+        appMode = 'demo';
+        applyDemoMode();
+      }
+      closeModeModal();
+      updateModeCards();
+    }
+
+    function applyServerMode(silent) {
+      // Pill
+      const pill = el('modePill');
+      pill.className = 'mode-pill server';
+      el('modePillTxt').textContent = 'SERVER';
+
+      // Banner
+      const b = el('modeBanner');
+      b.className = 'mode-banner server';
+      b.querySelector('#modeBannerIcon').textContent = '✓';
+      b.querySelector('#modeBannerTxt').textContent = 'SERVER MODE — Connected to backend at localhost:8000. Real AI inference active.';
+      el('shell').classList.add('banner-visible');
+
+      // Upload labels enabled
+      el('uplVid').classList.remove('disabled');
+      el('uplMdl').classList.remove('disabled');
+      el('demoUploadNotice').style.display = 'none';
+      el('mapDemoBadge').style.display = 'none';
+      el('notifServerOnly').textContent = '';
+      el('statInf').textContent = 'ONNX CPU';
+      setConn('', 'READY');
+
+      if (!silent) showToast('Server mode active', 'Connected to localhost:8000', 'success');
+      setTimeout(dismissBanner, 4000);
+    }
+
+    function applyDemoMode() {
+      appMode = 'demo';
+      // Pill
+      const pill = el('modePill');
+      pill.className = 'mode-pill demo';
+      el('modePillTxt').textContent = 'DEMO';
+
+      // Banner
+      const b = el('modeBanner');
+      b.className = 'mode-banner demo';
+      b.querySelector('#modeBannerIcon').textContent = '⚡';
+      b.querySelector('#modeBannerTxt').innerHTML = 'DEMO MODE — Simulated detections. Run <code>python backend/app.py</code> then click <strong>DEMO</strong> pill to switch.';
+      el('shell').classList.add('banner-visible');
+
+      // Disable server-only uploads
+      el('uplVid').classList.add('disabled');
+      el('uplMdl').classList.add('disabled');
+      el('demoUploadNotice').style.display = '';
+      el('mapDemoBadge').style.display = '';
+      el('notifServerOnly').textContent = '(server only)';
+      el('statInf').textContent = 'DEMO';
+      setConn('err', 'OFFLINE');
+    }
+
+    function dismissBanner() {
+      el('modeBanner').classList.add('hidden');
+      el('shell').classList.remove('banner-visible');
+    }
+
+    // Mode switch modal
+    function openModeModal() {
+      el('modeSwitchBg').classList.add('open');
+      updateModeCards();
+      probeBackend().then(ok => {
+        const s = el('serverStatusInModal');
+        s.textContent = ok ? '✓ Reachable at localhost:8000' : '✕ Not reachable at localhost:8000';
+        s.style.color = ok ? 'var(--g)' : 'var(--r)';
+      });
+    }
+    function closeModeModal() { el('modeSwitchBg').classList.remove('open'); }
+    function maybeCloseMode(e) { if (e.target === el('modeSwitchBg')) closeModeModal(); }
+    function updateModeCards() {
+      el('modeCardDemo').classList.toggle('active', appMode === 'demo');
+      el('modeCardServer').classList.toggle('active', appMode === 'server');
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // DEMO STREAM (client-side simulation)
+    // ══════════════════════════════════════════════════════════════════
+
+    let demoFrameIdx = 0;
+    let demoRouteIdx = 0;
+
+    function startDemoStream() {
+      demoFrameIdx = 0;
+      demoRouteIdx = 0;
+      el('vidEmpty').style.display = 'none';
+      el('vc').style.display = 'block';
+      el('scanLine').classList.add('on');
+      el('cornerBr').classList.add('on');
+      el('statConn').className = 'vstat demo-badge';
+      el('statConn').textContent = 'DEMO LIVE';
+
+      const cv = el('vc');
+      cv.width = 640; cv.height = 360;
+      const ctx = cv.getContext('2d');
+
+      demoInterval = setInterval(() => {
+        demoFrameIdx++;
+        const now = Date.now();
+        fpsTs.push(now);
+        fpsTs = fpsTs.filter(t => now - t < 1000);
+
+        // Draw fake road frame
+        drawDemoFrame(ctx, cv.width, cv.height, demoFrameIdx);
+
+        // GPS interpolation along demo route
+        const routeT = (demoFrameIdx % 300) / 300;
+        const n = DEMO_ROUTE.length - 1;
+        const si = Math.min(Math.floor(routeT * n), n - 1);
+        const st = routeT * n - si;
+        const a = DEMO_ROUTE[si], b = DEMO_ROUTE[si + 1] || a;
+        const gps = { lat: a.lat + (b.lat - a.lat) * st, lng: a.lng + (b.lng - a.lng) * st };
+
+        // Update car
+        if (carMarker) {
+          carMarker.setLatLng([gps.lat, gps.lng]);
+          map.panTo([gps.lat, gps.lng], { animate: true, duration: .2 });
+        }
+        el('hudGps').textContent = `${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)}`;
+        const lls = routePolyline.getLatLngs();
+        lls.push(L.latLng(gps.lat, gps.lng));
+        if (lls.length > 500) lls.shift();
+        routePolyline.setLatLngs(lls);
+
+        // KPIs
+        el('numFrame').textContent = demoFrameIdx;
+        el('numFps').textContent = fpsTs.length;
+        el('statRes').textContent = '640×360';
+        el('progFill').style.width = ((demoFrameIdx % 300) / 300 * 100) + '%';
+
+        // Random detections
+        if (Math.random() < 0.12) {
+          const cls = CLASS_NAMES_DEMO[Math.floor(Math.random() * CLASS_NAMES_DEMO.length)];
+          const conf = 0.45 + Math.random() * 0.45;
+          const ev = {
+            id: pothole_events.length,
+            lat: gps.lat + (Math.random() - 0.5) * 0.0002,
+            lng: gps.lng + (Math.random() - 0.5) * 0.0002,
+            conf: parseFloat(conf.toFixed(3)),
+            class_name: cls,
+            frame: demoFrameIdx,
+            thumb: null,
+            ts: Date.now() / 1000,
+            gps_source: 'demo-simulated'
+          };
+
+          // Draw detection box
+          drawDetectionBox(ctx, cv.width, cv.height, cls, conf);
+          // Capture thumb
+          ev.thumb = cv.toDataURL('image/jpeg', 0.6).split(',')[1];
+
+          detectionCount++;
+          pothole_events.push(ev);
+          addPothole(ev);
+          addEvItem(ev);
+          flashDet();
+          el('kpiPot').classList.remove('flash-r'); void el('kpiPot').offsetWidth; el('kpiPot').classList.add('flash-r');
+          el('numConf').textContent = (conf * 100).toFixed(0) + '%';
+          el('statInf').textContent = `${cls} ${(conf * 100).toFixed(0)}%`;
+          showDetectionToast(ev);
+        }
+
+        el('numPot').textContent = detectionCount;
+        el('hudPot').textContent = detectionCount;
+
+        const rate = detectionCount / Math.max(demoFrameIdx, 1);
+        const rawQ = 100 - rate * 380 - detectionCount * 2.1;
+        const quality = Math.max(0, Math.min(100, Math.round(rawQ)));
+        const qEl = el('numQuality');
+        qEl.textContent = quality;
+        qEl.className = 'kpi-num ' + (quality > 75 ? 'c-g' : quality > 45 ? 'c-o' : 'c-r');
+
+      }, 1000 / 15);
+    }
+
+    function stopDemoStream() {
+      if (demoInterval) { clearInterval(demoInterval); demoInterval = null; }
+      el('statConn').className = 'vstat';
+      el('statConn').textContent = 'DISCONNECTED';
+    }
+
+    function drawDemoFrame(ctx, w, h, frame) {
+      // Sky gradient
+      const sky = ctx.createLinearGradient(0, 0, 0, h * 0.45);
+      sky.addColorStop(0, '#0d1117');
+      sky.addColorStop(1, '#1a2535');
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h * 0.45);
+
+      // Road
+      const road = ctx.createLinearGradient(0, h * 0.45, 0, h);
+      road.addColorStop(0, '#2a2a2a');
+      road.addColorStop(1, '#1a1a1a');
+      ctx.fillStyle = road; ctx.fillRect(0, h * 0.45, w, h * 0.55);
+
+      // Road lines (animated)
+      const offset = (frame * 8) % 60;
+      ctx.strokeStyle = 'rgba(255,220,0,0.7)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([40, 20]);
+      ctx.lineDashOffset = -offset;
+      ctx.beginPath();
+      ctx.moveTo(w / 2, h * 0.45);
+      ctx.lineTo(w / 2, h);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Side lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(w * 0.15, h * 0.45); ctx.lineTo(w * 0.05, h); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(w * 0.85, h * 0.45); ctx.lineTo(w * 0.95, h); ctx.stroke();
+
+      // Frame counter overlay
+      ctx.fillStyle = 'rgba(10,132,255,0.7)';
+      ctx.font = '10px "Space Mono", monospace';
+      ctx.fillText(`FRAME ${frame} · DEMO`, 8, 16);
+    }
+
+    function drawDetectionBox(ctx, w, h, cls, conf) {
+      const colors = { D00: '#0a84ff', D20: '#ff9f0a', D50: '#ff3b30', D40: '#ff9f0a', D10: '#30d158' };
+      const color = colors[cls] || '#ff3b30';
+      const bx = w * (0.25 + Math.random() * 0.35);
+      const by = h * (0.55 + Math.random() * 0.3);
+      const bw2 = 80 + Math.random() * 60;
+      const bh2 = 40 + Math.random() * 40;
+      ctx.strokeStyle = color; ctx.lineWidth = 2;
+      ctx.strokeRect(bx, by, bw2, bh2);
+      ctx.fillStyle = color + '33';
+      ctx.fillRect(bx, by, bw2, bh2);
+      ctx.fillStyle = color;
+      ctx.font = 'bold 10px "Space Mono", monospace';
+      ctx.fillText(`${cls} ${(conf * 100).toFixed(0)}%`, bx + 3, by - 4);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // LIVE GPS
+    // ══════════════════════════════════════════════════════════════════
+
+    function startLiveGps() {
+      if (!navigator.geolocation) { setGpsStatus('err', 'Not supported'); return; }
       setGpsStatus('warn', 'Acquiring…');
       geoWatchId = navigator.geolocation.watchPosition(
         pos => {
-          liveGps = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            accuracy: pos.coords.accuracy,
-            ts: Date.now()
-          };
+          liveGps = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy, ts: Date.now() };
           liveGpsEnabled = true;
           setGpsStatus('active', 'Live fix');
           el('gpsCoordDisplay').textContent = `${liveGps.lat.toFixed(6)}, ${liveGps.lng.toFixed(6)}`;
@@ -1409,12 +1983,8 @@
         },
         err => {
           liveGpsEnabled = false;
-          if (err.code === 1) {
-            setGpsStatus('err', 'Denied');
-            showToast('GPS denied', 'Allow location permission for live GPS tagging.', 'warn');
-          } else {
-            setGpsStatus('err', 'No signal');
-          }
+          if (err.code === 1) { setGpsStatus('err', 'Denied'); showToast('GPS denied', 'Allow location for live GPS tagging.', 'warn'); }
+          else setGpsStatus('err', 'No signal');
           el('hudGpsDot').classList.remove('active');
         },
         { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
@@ -1422,12 +1992,8 @@
     }
 
     function stopLiveGps() {
-      if (geoWatchId !== null) {
-        navigator.geolocation.clearWatch(geoWatchId);
-        geoWatchId = null;
-      }
-      liveGpsEnabled = false;
-      liveGps = null;
+      if (geoWatchId !== null) { navigator.geolocation.clearWatch(geoWatchId); geoWatchId = null; }
+      liveGpsEnabled = false; liveGps = null;
       setGpsStatus('', 'No fix');
       el('gpsCoordDisplay').textContent = '—';
       el('gpsAccDisplay').textContent = 'Accuracy: —';
@@ -1435,38 +2001,22 @@
       el('statGps').style.display = 'none';
     }
 
-    function getCurrentGps(fallbackLat, fallbackLng) {
-      // For webcam/rear: always use live GPS if available
-      if ((streamSrc === 'webcam' || streamSrc === 'rear') && liveGpsEnabled && liveGps) {
-        return { lat: liveGps.lat, lng: liveGps.lng, source: 'live' };
-      }
-      // For file mode: use interpolated or fallback
-      return { lat: fallbackLat || 18.5204, lng: fallbackLng || 73.8567, source: 'interpolated' };
-    }
-
     function setGpsStatus(state, txt) {
       el('gpsDot').className = 'gps-dot' + (state ? ' ' + state : '');
       el('gpsTxt').textContent = txt;
     }
 
-    // Download a GPS template JSON that matches backend format
     function downloadGpsTemplate() {
-      const template = [
-        { "lat": 18.5204, "lng": 73.8567, "note": "Start — replace with your route" },
-        { "lat": 18.5220, "lng": 73.8590 },
-        { "lat": 18.5245, "lng": 73.8610 },
-        { "lat": 18.5270, "lng": 73.8640 },
-        { "lat": 18.5290, "lng": 73.8660, "note": "End" }
-      ];
-      const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'gps_waypoints_template.json';
-      a.click();
-      showToast('Template downloaded', 'Edit lat/lng to match your video route, then upload.', 'info');
+      const t = [{ lat: 18.5204, lng: 73.8567, note: "Start" }, { lat: 18.5220, lng: 73.8590 }, { lat: 18.5245, lng: 73.8610 }, { lat: 18.5270, lng: 73.8640 }, { lat: 18.5290, lng: 73.8660, note: "End" }];
+      const blob = new Blob([JSON.stringify(t, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gps_waypoints_template.json'; a.click();
+      showToast('Template downloaded', 'Edit lat/lng to match your route.', 'info');
     }
 
-    // ── Map ──────────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // MAP
+    // ══════════════════════════════════════════════════════════════════
+
     function initMap() {
       if (map) { map.remove(); map = null; }
       const dark = document.documentElement.dataset.theme === 'dark';
@@ -1477,17 +2027,16 @@
         { attribution: '© OpenStreetMap © CARTO', maxZoom: 19 }
       ).addTo(map);
       L.control.zoom({ position: 'bottomright' }).addTo(map);
-      // Smaller car marker (16px)
       const carHtml = `<div style="width:16px;height:16px;background:var(--b);border-radius:50%;border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:8px;box-shadow:0 0 6px var(--b)">🚗</div>`;
       carMarker = L.marker([18.5204, 73.8567], { icon: L.divIcon({ html: carHtml, iconSize: [16, 16], iconAnchor: [8, 8], className: '' }) }).addTo(map);
       routePolyline = L.polyline([], { color: 'var(--b)', weight: 2, opacity: .5, dashArray: '5 5' }).addTo(map);
-      heatLayer = L.heatLayer([], {
-        radius: 28, blur: 22, maxZoom: 17,
-        gradient: { 0.3: '#0a84ff', 0.6: '#ff9f0a', 1.0: '#ff3b30' }
-      }).addTo(map);
+      heatLayer = L.heatLayer([], { radius: 28, blur: 22, maxZoom: 17, gradient: { 0.3: '#0a84ff', 0.6: '#ff9f0a', 1.0: '#ff3b30' } }).addTo(map);
     }
 
-    // ── Source switching ──────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // SOURCE SWITCHING
+    // ══════════════════════════════════════════════════════════════════
+
     function setSrc(src) {
       streamSrc = src;
       ['file', 'webcam', 'rear'].forEach(s => {
@@ -1495,16 +2044,9 @@
       });
       el('camSelectWrap').style.display = (src === 'webcam' || src === 'rear') ? 'block' : 'none';
       el('statSrc').textContent = src.toUpperCase();
-
-      // Show GPS info banner only for file mode
       el('gpsFileInfo').style.display = src === 'file' ? '' : 'none';
-
-      if (src === 'webcam' || src === 'rear') {
-        enumerateCameras(src);
-        startLiveGps();
-      } else {
-        stopLiveGps();
-      }
+      if (src === 'webcam' || src === 'rear') { enumerateCameras(src); startLiveGps(); }
+      else stopLiveGps();
     }
 
     async function enumerateCameras(prefer) {
@@ -1512,8 +2054,7 @@
         await navigator.mediaDevices.getUserMedia({ video: true });
         const devices = await navigator.mediaDevices.enumerateDevices();
         const cams = devices.filter(d => d.kind === 'videoinput');
-        const sel = el('camSelect');
-        sel.innerHTML = '';
+        const sel = el('camSelect'); sel.innerHTML = '';
         cams.forEach((cam, i) => {
           const opt = document.createElement('option');
           opt.value = cam.deviceId;
@@ -1526,7 +2067,10 @@
       } catch (e) { showToast('Camera access denied', 'Enable camera permissions and refresh.', 'warn'); }
     }
 
-    // ── Webcam → WebSocket ─────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // WEBCAM STREAM (server mode uses WS; demo mode sends to demo handler)
+    // ══════════════════════════════════════════════════════════════════
+
     async function startWebcamStream() {
       stopWebcamStream();
       const deviceId = el('camSelect')?.value;
@@ -1542,8 +2086,6 @@
         try { webcamStream = await navigator.mediaDevices.getUserMedia({ video: true }); }
         catch (e2) { showToast('Camera error', e2.message, 'error'); return; }
       }
-
-      // Ensure live GPS is running
       if (!liveGpsEnabled) startLiveGps();
 
       el('vidEmpty').style.display = 'none';
@@ -1551,34 +2093,88 @@
       el('scanLine').classList.add('on');
       el('cornerBr').classList.add('on');
       el('statSrc').textContent = streamSrc === 'rear' ? 'REAR CAM' : 'WEBCAM';
-      el('statConn').textContent = 'CONNECTING…';
 
-      webcamWs = new WebSocket(WS_URL + '?src=webcam');
-      webcamWs.onopen = () => { setConn('live', 'LIVE'); el('statConn').className = 'vstat live-badge webcam-badge'; el('statConn').textContent = 'WEBCAM LIVE'; startSendingFrames(); };
-      webcamWs.onmessage = e => onFrame(JSON.parse(e.data));
-      webcamWs.onclose = () => { setConn('', 'IDLE'); el('statConn').className = 'vstat'; el('statConn').textContent = 'DISCONNECTED'; };
-      webcamWs.onerror = () => { setConn('err', 'ERROR'); showToast('WebSocket error', 'Cannot reach backend.', 'error'); };
-      ws = webcamWs;
+      if (appMode === 'server') {
+        // Real server webcam mode
+        el('statConn').textContent = 'CONNECTING…';
+        webcamWs = new WebSocket(WS_URL + '?src=webcam');
+        webcamWs.onopen = () => { setConn('live', 'LIVE'); el('statConn').className = 'vstat live-badge webcam-badge'; el('statConn').textContent = 'WEBCAM LIVE'; startSendingFrames(); };
+        webcamWs.onmessage = e => onServerFrame(JSON.parse(e.data));
+        webcamWs.onclose = () => { setConn('', 'IDLE'); el('statConn').className = 'vstat'; el('statConn').textContent = 'DISCONNECTED'; };
+        webcamWs.onerror = () => { setConn('err', 'ERROR'); showToast('WebSocket error', 'Cannot reach backend.', 'error'); };
+        ws = webcamWs;
+      } else {
+        // Demo webcam: show real camera feed + simulated detections overlay
+        el('statConn').className = 'vstat demo-badge';
+        el('statConn').textContent = 'DEMO WEBCAM';
+        startWebcamDemoOverlay();
+      }
+    }
+
+    function startWebcamDemoOverlay() {
+      // Show real webcam in canvas + overlay simulated detections
+      const video = document.createElement('video');
+      video.srcObject = webcamStream;
+      video.play();
+      const cv = el('vc');
+      const ctx = cv.getContext('2d');
+
+      webcamCapInterval = setInterval(() => {
+        if (!webcamStream || !video.videoWidth) return;
+        if (cv.width !== video.videoWidth) { cv.width = video.videoWidth; cv.height = video.videoHeight; }
+        ctx.drawImage(video, 0, 0);
+        el('statRes').textContent = `${cv.width}×${cv.height}`;
+
+        fpsTs.push(Date.now());
+        fpsTs = fpsTs.filter(t => Date.now() - t < 1000);
+        el('numFps').textContent = fpsTs.length;
+        el('numFrame').textContent = ++demoFrameIdx;
+
+        // GPS from live location if available
+        const gps = liveGpsEnabled && liveGps
+          ? { lat: liveGps.lat, lng: liveGps.lng }
+          : { lat: 18.5204 + demoFrameIdx * 0.00001, lng: 73.8567 + demoFrameIdx * 0.000008 };
+
+        if (carMarker) { carMarker.setLatLng([gps.lat, gps.lng]); map.panTo([gps.lat, gps.lng], { animate: true, duration: .2 }); }
+        el('hudGps').textContent = `${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)}`;
+
+        if (Math.random() < 0.08) {
+          const cls = CLASS_NAMES_DEMO[Math.floor(Math.random() * CLASS_NAMES_DEMO.length)];
+          const conf = 0.45 + Math.random() * 0.45;
+          drawDetectionBox(ctx, cv.width, cv.height, cls, conf);
+          const ev = {
+            id: pothole_events.length,
+            lat: gps.lat + (Math.random() - 0.5) * 0.0002,
+            lng: gps.lng + (Math.random() - 0.5) * 0.0002,
+            conf: parseFloat(conf.toFixed(3)),
+            class_name: cls, frame: demoFrameIdx,
+            thumb: cv.toDataURL('image/jpeg', 0.5).split(',')[1],
+            ts: Date.now() / 1000,
+            gps_source: liveGpsEnabled ? `live ±${Math.round(liveGps?.accuracy || 10)}m` : 'demo-sim'
+          };
+          detectionCount++;
+          pothole_events.push(ev);
+          addPothole(ev); addEvItem(ev); flashDet();
+          el('kpiPot').classList.remove('flash-r'); void el('kpiPot').offsetWidth; el('kpiPot').classList.add('flash-r');
+          el('numConf').textContent = (conf * 100).toFixed(0) + '%';
+          showDetectionToast(ev);
+        }
+        el('numPot').textContent = detectionCount;
+        el('hudPot').textContent = detectionCount;
+      }, 1000 / 15);
     }
 
     function startSendingFrames() {
       const video = document.createElement('video');
-      video.srcObject = webcamStream;
-      video.play();
+      video.srcObject = webcamStream; video.play();
       const captureCanvas = document.createElement('canvas');
       let captureCtx = null;
       webcamCapInterval = setInterval(() => {
         if (!webcamStream || webcamWs?.readyState !== 1) return;
         if (!video.videoWidth) return;
-        if (captureCanvas.width !== video.videoWidth) {
-          captureCanvas.width = video.videoWidth;
-          captureCanvas.height = video.videoHeight;
-          captureCtx = captureCanvas.getContext('2d');
-        }
+        if (captureCanvas.width !== video.videoWidth) { captureCanvas.width = video.videoWidth; captureCanvas.height = video.videoHeight; captureCtx = captureCanvas.getContext('2d'); }
         captureCtx.drawImage(video, 0, 0);
-        captureCanvas.toBlob(blob => {
-          if (blob && webcamWs?.readyState === 1) webcamWs.send(blob);
-        }, 'image/jpeg', 0.7);
+        captureCanvas.toBlob(blob => { if (blob && webcamWs?.readyState === 1) webcamWs.send(blob); }, 'image/jpeg', 0.7);
       }, 1000 / 15);
     }
 
@@ -1588,21 +2184,31 @@
       webcamWs = null;
     }
 
-    // ── Stream ────────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // STREAM CONTROL
+    // ══════════════════════════════════════════════════════════════════
+
     function startStream() {
+      pothole_events = [];   // reset for export
       detectionCount = 0;
-      pothole_events = [];
       el('evList').innerHTML = '<div class="ev-empty" id="evEmpty">Loading…</div>';
       el('btnStart').style.display = 'none';
       el('btnStop').style.display = 'inline-flex';
+      routePolyline?.setLatLngs([]);
 
       if (streamSrc === 'webcam' || streamSrc === 'rear') {
         startWebcamStream(); return;
       }
 
-      // File mode
-      stopWebcamStream();
-      stopLiveGps();
+      if (appMode === 'demo') {
+        // Demo file mode: pure simulation
+        el('gpsFileInfo').style.display = '';
+        startDemoStream();
+        return;
+      }
+
+      // Server file mode
+      stopWebcamStream(); stopLiveGps();
       if (ws) ws.close();
       setConn('connecting', 'CONNECTING');
       el('vidEmpty').style.display = 'none';
@@ -1615,7 +2221,7 @@
 
       ws = new WebSocket(WS_URL);
       ws.onopen = () => { setConn('live', 'LIVE'); el('statConn').className = 'vstat live-badge'; el('statConn').textContent = 'LIVE'; };
-      ws.onmessage = e => onFrame(JSON.parse(e.data));
+      ws.onmessage = e => onServerFrame(JSON.parse(e.data));
       ws.onclose = () => { setConn('', 'IDLE'); el('statConn').className = 'vstat'; el('statConn').textContent = 'DISCONNECTED'; };
       ws.onerror = () => {
         setConn('err', 'ERROR'); el('statConn').textContent = 'ERROR';
@@ -1626,6 +2232,7 @@
     function stopStream() {
       if (ws) { ws.close(); ws = null; }
       stopWebcamStream();
+      stopDemoStream();
       setConn('', 'IDLE');
       el('btnStart').style.display = 'inline-flex';
       el('btnStop').style.display = 'none';
@@ -1633,21 +2240,22 @@
       el('cornerBr').classList.remove('on');
     }
 
-    // ── Frame handler ──────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // SERVER FRAME HANDLER
+    // ══════════════════════════════════════════════════════════════════
+
     const _img = new Image();
-    function onFrame(d) {
+    function onServerFrame(d) {
       if (d.error) { showToast('Stream error', d.error, 'error'); stopStream(); return; }
       if (d.done) {
         showToast('Video complete', `Processed ${d.frame_idx || 0} frames · ${detectionCount} detections`, 'success');
-        stopStream();
-        return;
+        stopStream(); return;
       }
 
       const now = Date.now();
       fpsTs.push(now);
       fpsTs = fpsTs.filter(t => now - t < 1000);
 
-      // GPS: for webcam/rear use live browser GPS; for file use backend-provided GPS
       let gps = d.gps || {};
       let gpsSrc = 'interpolated';
       if ((streamSrc === 'webcam' || streamSrc === 'rear') && liveGpsEnabled && liveGps) {
@@ -1667,25 +2275,17 @@
       _img.src = 'data:image/jpeg;base64,' + d.frame;
 
       if (d.event) {
-        // Override event GPS with live GPS if on webcam
         if ((streamSrc === 'webcam' || streamSrc === 'rear') && liveGpsEnabled && liveGps) {
-          d.event.lat = liveGps.lat;
-          d.event.lng = liveGps.lng;
-          d.event.gps_source = gpsSrc;
-        } else {
-          d.event.gps_source = gpsSrc;
-        }
+          d.event.lat = liveGps.lat; d.event.lng = liveGps.lng; d.event.gps_source = gpsSrc;
+        } else { d.event.gps_source = gpsSrc; }
 
-        pothole_events.push(d.event);
         detectionCount++;
-        addPothole(d.event);
-        addEvItem(d.event);
-        flashDet();
+        pothole_events.push(d.event);   // FIX: populate for export
+        addPothole(d.event); addEvItem(d.event); flashDet();
         el('kpiPot').classList.remove('flash-r'); void el('kpiPot').offsetWidth; el('kpiPot').classList.add('flash-r');
         el('numConf').textContent = (d.event.conf * 100).toFixed(0) + '%';
         el('statInf').textContent = `${d.event.class_name?.toUpperCase() || 'POTHOLE'} ${(d.event.conf * 100).toFixed(0)}%`;
         showDetectionToast(d.event);
-
       }
 
       el('numPot').textContent = detectionCount;
@@ -1715,32 +2315,39 @@
       el('progFill').style.width = Math.min((d.frame_idx || 0) / total * 100, 100) + '%';
     }
 
-    // ── Map markers (smaller pins) ─────────────────────────────────────────
-    const CLASS_COLORS = { 'pothole': '#ff3b30', 'crack': '#ff9f0a', 'longitudinal-crack': '#0a84ff', 'transverse-crack': '#bf5af2', 'alligator-crack': '#ff375f', 'repair-patch': '#30d158', 'manhole': '#64d2ff', 'subsidence': '#ffd60a' };
+    // ══════════════════════════════════════════════════════════════════
+    // MAP MARKERS
+    // ══════════════════════════════════════════════════════════════════
+
+    const CLASS_COLORS = { 'D00': '#0a84ff', 'D20': '#ff9f0a', 'D50': '#ff3b30', 'D40': '#ff9f0a', 'D43': '#30d158', 'D10': '#64d2ff', 'D44': '#bf5af2', 'pothole': '#ff3b30', 'crack': '#ff9f0a' };
     function classColor(n) { return CLASS_COLORS[n] || '#ff3b30'; }
 
     function addPothole(ev) {
       const c = classColor(ev.class_name);
-      // Smaller pin: 12px circle
       const html = `<div style="width:12px;height:12px;background:${c};border-radius:50%;border:1.5px solid rgba(255,255,255,.4);cursor:pointer;box-shadow:0 0 5px ${c}66"></div>`;
       const m = L.marker([ev.lat, ev.lng], { icon: L.divIcon({ html, iconSize: [12, 12], iconAnchor: [6, 6], className: '' }) });
       const gpsSrcLabel = ev.gps_source ? `<span style="font-size:9px;color:#7c8494"> · ${ev.gps_source}</span>` : '';
       m.bindPopup(`<div class="popup-inner">
-        ${ev.thumb ? `<img class="popup-img" src="data:image/jpeg;base64,${ev.thumb}">` : ''}
-        <div class="popup-title">⚠ ${(ev.class_name || 'Pothole')} #${ev.id + 1}</div>
-        <div class="popup-sub">${(ev.conf * 100).toFixed(0)}% conf · frame ${ev.frame}${gpsSrcLabel}</div>
-      </div>`, { maxWidth: 220 });
+    ${ev.thumb ? `<img class="popup-img" src="data:image/jpeg;base64,${ev.thumb}">` : ''}
+    <div class="popup-title">⚠ ${(ev.class_name || 'Pothole')} #${ev.id + 1}</div>
+    <div class="popup-sub">${(ev.conf * 100).toFixed(0)}% conf · frame ${ev.frame}${gpsSrcLabel}</div>
+  </div>`, { maxWidth: 220 });
       m.on('click', () => openModal(ev));
       m.addTo(map);
       heatLayer.addLatLng([ev.lat, ev.lng, Math.min(ev.conf * 1.4, 1.0)]);
     }
 
-    // ── Toast ──────────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // TOAST
+    // ══════════════════════════════════════════════════════════════════
+
     let lastToastTime = 0;
     function showDetectionToast(ev) {
       const now = Date.now(); if (now - lastToastTime < 4000) return; lastToastTime = now;
       const name = (ev.class_name || 'Pothole').replace(/-/g, ' ');
-      showToast(`⚠ ${name.charAt(0).toUpperCase() + name.slice(1)} detected`, `Conf: ${(ev.conf * 100).toFixed(0)}%\n${ev.lat.toFixed(5)}, ${ev.lng.toFixed(5)}\nGPS: ${ev.gps_source || 'interpolated'}`, 'detection', classColor(ev.class_name), ev);
+      showToast(`⚠ ${name.charAt(0).toUpperCase() + name.slice(1)} detected`,
+        `Conf: ${(ev.conf * 100).toFixed(0)}%\n${ev.lat.toFixed(5)}, ${ev.lng.toFixed(5)}\nGPS: ${ev.gps_source || 'interpolated'}`,
+        'detection', classColor(ev.class_name), ev);
     }
 
     function showToast(title, body, type = 'info', color = null, ev = null) {
@@ -1750,31 +2357,37 @@
       const bc = color || (type === 'error' ? 'var(--r)' : type === 'detection' ? 'var(--r)' : type === 'success' ? 'var(--g)' : 'var(--border2)');
       div.style.borderLeftColor = bc; div.style.borderLeftWidth = '3px';
       div.innerHTML = `<div class="toast-title">${icon} ${title}<span class="toast-close" onclick="this.closest('.toast').remove()">✕</span></div>
-      <div class="toast-body" style="white-space:pre-line">${body}</div>
-      ${ev ? `<div style="margin-top:6px"><button onclick="openModal(window._lastEv)" class="btn btn-ghost" style="font-size:10px;padding:3px 8px">View →</button></div>` : ''}`;
+    <div class="toast-body" style="white-space:pre-line">${body}</div>
+    ${ev ? `<div style="margin-top:6px"><button onclick="openModal(window._lastEv)" class="btn btn-ghost" style="font-size:10px;padding:3px 8px">View →</button></div>` : ''}`;
       if (ev) window._lastEv = ev;
       c.appendChild(div);
       setTimeout(() => div.remove(), 7000);
       while (c.children.length > 4) c.firstChild.remove();
     }
 
-    // ── Event log ──────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // EVENT LOG
+    // ══════════════════════════════════════════════════════════════════
+
     function addEvItem(ev) {
       const empty = el('evEmpty'); if (empty) empty.remove();
       const badge = ev.conf > .7 ? 'badge-r' : ev.conf > .5 ? 'badge-o' : 'badge-g';
       const d = document.createElement('div'); d.className = 'ev-item'; d.onclick = () => openModal(ev);
       d.innerHTML = `${ev.thumb ? `<img class="ev-thumb" src="data:image/jpeg;base64,${ev.thumb}">` : '<div class="ev-thumb" style="background:var(--bg3)"></div>'}
-      <div class="ev-body">
-        <div class="ev-title">${(ev.class_name || 'Pothole').replace(/-/g, ' ')} #${ev.id + 1}</div>
-        <div class="ev-sub">${ev.lat.toFixed(5)}, ${ev.lng.toFixed(5)} · ${ev.gps_source || 'interp'}</div>
-      </div>
-      <span class="badge ${badge}">${(ev.conf * 100).toFixed(0)}%</span>`;
+    <div class="ev-body">
+      <div class="ev-title">${(ev.class_name || 'Pothole').replace(/-/g, ' ')} #${ev.id + 1}</div>
+      <div class="ev-sub">${ev.lat.toFixed(5)}, ${ev.lng.toFixed(5)} · ${ev.gps_source || 'interp'}</div>
+    </div>
+    <span class="badge ${badge}">${(ev.conf * 100).toFixed(0)}%</span>`;
       el('evList').prepend(d);
     }
 
     function flashDet() { const f = el('detFlash'); f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop'); }
 
-    // ── Modal ──────────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // MODAL
+    // ══════════════════════════════════════════════════════════════════
+
     function openModal(ev) {
       el('modalImg').src = ev.thumb ? 'data:image/jpeg;base64,' + ev.thumb : '';
       el('modalTitle').textContent = `⚠ ${(ev.class_name || 'Pothole').replace(/-/g, ' ')} detected`;
@@ -1787,6 +2400,12 @@
       el('modalBg').classList.add('open');
     }
     function closeModal() { el('modalBg').classList.remove('open'); }
+    function maybeClose(e) { if (e.target === el('modalBg')) closeModal(); }
+
+    // ══════════════════════════════════════════════════════════════════
+    // EXPORT — FIX: now uses client-side pothole_events array
+    // ══════════════════════════════════════════════════════════════════
+
     function toggleExportMenu() {
       const m = el('exportMenu');
       m.style.display = m.style.display === 'none' ? 'block' : 'none';
@@ -1795,7 +2414,7 @@
     }
 
     function exportCSV() {
-      if (!pothole_events?.length) { showToast('No data', 'Run a detection first.', 'warn'); return; }
+      if (!pothole_events?.length) { showToast('No data', 'Run a detection session first.', 'warn'); return; }
       const rows = [['id', 'lat', 'lng', 'confidence', 'class', 'frame', 'gps_source', 'timestamp']];
       pothole_events.forEach(ev => rows.push([
         ev.id + 1, ev.lat.toFixed(6), ev.lng.toFixed(6),
@@ -1810,7 +2429,7 @@
     }
 
     function exportGeoJSON() {
-      if (!pothole_events?.length) { showToast('No data', 'Run a detection first.', 'warn'); return; }
+      if (!pothole_events?.length) { showToast('No data', 'Run a detection session first.', 'warn'); return; }
       const geojson = {
         type: 'FeatureCollection',
         features: pothole_events.map(ev => ({
@@ -1834,17 +2453,22 @@
       a.href = URL.createObjectURL(new Blob([content], { type: mime }));
       a.download = filename; a.click();
     }
-    function maybeClose(e) { if (e.target === el('modalBg')) closeModal(); }
 
-    // ── Uploads ────────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // UPLOADS (server mode only)
+    // ══════════════════════════════════════════════════════════════════
+
     async function uploadVideo(inp) {
+      if (appMode === 'demo') { showToast('Server required', 'Switch to Server mode to upload files.', 'warn'); inp.value = ''; return; }
       const f = inp.files[0]; if (!f) return;
       const fd = new FormData(); fd.append('file', f);
       const r = await fetch(API + '/upload/video', { method: 'POST', body: fd }).catch(() => null);
       if (r?.ok) { el('vidName').textContent = f.name; el('uplVid').classList.add('ok'); setSrc('file'); }
       else showToast('Upload failed', 'Check backend connection.', 'error');
     }
+
     async function uploadModel(inp) {
+      if (appMode === 'demo') { showToast('Server required', 'Switch to Server mode to upload a model.', 'warn'); inp.value = ''; return; }
       const f = inp.files[0]; if (!f) return;
       const fd = new FormData(); fd.append('file', f);
       const r = await fetch(API + '/upload/model', { method: 'POST', body: fd }).catch(() => null);
@@ -1856,35 +2480,62 @@
         showToast('Model loaded', `${f.name}\n${ep}`, 'success');
       }
     }
+
     async function uploadGPS(inp) {
       const f = inp.files[0]; if (!f) return;
       let pts; try { pts = JSON.parse(await f.text()); } catch { showToast('GPS error', 'Invalid JSON file', 'error'); return; }
-      const r = await fetch(API + '/upload/waypoints', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pts) }).catch(() => null);
-      if (r?.ok) {
+      if (appMode === 'server') {
+        const r = await fetch(API + '/upload/waypoints', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pts) }).catch(() => null);
+        if (r?.ok) {
+          el('gpsName').textContent = f.name; el('uplGps').classList.add('ok');
+          const ll = pts.map(p => [p.lat, p.lng]);
+          L.polyline(ll, { color: 'var(--b)', weight: 2, opacity: .5, dashArray: '5 5' }).addTo(map);
+          map.fitBounds(L.latLngBounds(ll), { padding: [20, 20] });
+          el('gpsFileInfo').style.display = 'none';
+          showToast('GPS loaded', `${pts.length} waypoints`, 'success');
+        }
+      } else {
+        // Demo: just draw the route on map
         el('gpsName').textContent = f.name; el('uplGps').classList.add('ok');
         const ll = pts.map(p => [p.lat, p.lng]);
         L.polyline(ll, { color: 'var(--b)', weight: 2, opacity: .5, dashArray: '5 5' }).addTo(map);
         map.fitBounds(L.latLngBounds(ll), { padding: [20, 20] });
-        el('gpsFileInfo').style.display = 'none'; // Hide warning once real GPS loaded
-        showToast('GPS loaded', `${pts.length} waypoints`, 'success');
+        showToast('GPS loaded (demo)', `${pts.length} waypoints visualised`, 'info');
       }
     }
 
-    // ── Notifications ──────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // NOTIFICATIONS (server only)
+    // ══════════════════════════════════════════════════════════════════
+
     async function saveNotifConfig() {
+      if (appMode === 'demo') { showToast('Server required', 'Notifications need the backend.', 'warn'); return; }
       const cfg = { smtp_host: el('cfgSmtpHost').value.trim() || 'smtp.gmail.com', smtp_user: el('cfgEmail').value.trim(), smtp_pass: el('cfgPass').value, alert_to: el('cfgAlertTo').value.trim(), ntfy_topic: el('cfgNtfy').value.trim() };
       const r = await fetch(API + '/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) }).catch(() => null);
       if (r?.ok) { const data = await r.json(); updateNotifBadge(data.notifier_enabled); showToast('Notifications saved', data.notifier_enabled ? 'Email alerts active' : 'ntfy.sh only (no SMTP)', 'success'); }
       else showToast('Save failed', 'Backend unreachable', 'error');
     }
+
     async function testNotif() {
+      if (appMode === 'demo') { showToast('Server required', 'Switch to Server mode.', 'warn'); return; }
       const r = await fetch(API + '/test-notification', { method: 'POST' }).catch(() => null);
       if (r?.ok) { const d = await r.json(); showToast('Test sent', `email:${d.enabled} ntfy:${d.ntfy}`, 'success'); }
       else showToast('Test failed', 'Save config first', 'error');
     }
+
     function updateNotifBadge(on) { const b = el('notifBadge'); b.textContent = on ? 'ON' : 'OFF'; b.className = 'notif-badge ' + (on ? 'on' : 'off'); }
 
-    // ── Theme ──────────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // MISC
+    // ══════════════════════════════════════════════════════════════════
+
+    async function pushConfThreshold(v) {
+      if (appMode === 'demo') return;
+      await fetch(API + '/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conf_threshold: parseFloat(v) / 100 }) }).catch(() => null);
+    }
+
+    function onConfSlider(v) { el('confValDisplay').textContent = v + '%'; }
+
     function toggleTheme() {
       const dark = document.documentElement.dataset.theme === 'dark';
       document.documentElement.dataset.theme = dark ? 'light' : 'dark';
@@ -1892,66 +2543,13 @@
       initMap();
     }
 
-    function onConfSlider(v) {
-      el('confValDisplay').textContent = v + '%';
-    }
-
-    async function pushConfThreshold(v) {
-      await fetch(API + '/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conf_threshold: parseFloat(v) / 100 })
-      }).catch(() => null);
-    }
-
     function setConn(cls, txt) { el('connDot').className = 'conn-dot ' + cls; el('connTxt').textContent = txt; }
     function el(id) { return document.getElementById(id); }
 
-    async function checkHealth() {
-      try {
-        const [hr, sr] = await Promise.all([
-          fetch(API + '/health', { signal: AbortSignal.timeout(3000) }),
-          fetch(API + '/state', { signal: AbortSignal.timeout(3000) })
-        ]);
-        if (hr.ok) {
-          const d = await hr.json();
-          const ep = d.providers?.[0] || 'CPU';
-          el('statInf').textContent = d.model_loaded
-            ? (ep.includes('CoreML') ? 'COREML ✓' : ep.includes('CUDA') ? 'CUDA ✓' : 'ONNX CPU')
-            : 'DEMO MODE';
-          setConn('', 'READY');
-          updateNotifBadge(d.notifier_on);
-        }
-        if (sr.ok) {
-          const s = await sr.json();
-          if (s.model_file) {
-            el('mdlName').textContent = s.model_file;
-            el('uplMdl').classList.add('ok');
-          }
-          if (s.video_file) {
-            el('vidName').textContent = s.video_file;
-            el('uplVid').classList.add('ok');
-          }
-          if (s.waypoints_count > 2) {
-            el('gpsName').textContent = `${s.waypoints_count} waypoints loaded`;
-            el('uplGps').classList.add('ok');
-            el('gpsFileInfo').style.display = 'none';
-          }
-          if (s.conf_threshold) {
-            const pct = Math.round(s.conf_threshold * 100);
-            el('confSlider').value = pct;
-            el('confValDisplay').textContent = pct + '%';
-          }
-        }
-      } catch {
-        setConn('err', 'BACKEND OFFLINE');
-        el('statInf').textContent = 'OFFLINE';
-        showToast('Backend offline', 'Run: python backend/app.py', 'warn');
-      }
-    }
-
+    // ── Boot ──────────────────────────────────────────────────────────
     initMap();
-    checkHealth();
+    applyDemoMode();   // start in demo
+    checkHealth();     // async probe — upgrades to server if backend found
   </script>
 </body>
 
